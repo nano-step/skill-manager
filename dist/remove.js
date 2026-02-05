@@ -10,8 +10,8 @@ const fs_extra_1 = __importDefault(require("fs-extra"));
 const utils_1 = require("./utils");
 async function remove() {
     const paths = await (0, utils_1.detectOpenCodePaths)();
-    const skillTargetDir = path_1.default.join(paths.skillsDir, "mcp-management");
-    const commandTargetPath = path_1.default.join(paths.commandDir, "mcp-refresh.md");
+    const skillTargetDir = path_1.default.join(paths.skillsDir, "agent-skill-management");
+    const commandTargetPath = path_1.default.join(paths.commandDir, "agent-skill-refresh.md");
     if (await fs_extra_1.default.pathExists(skillTargetDir)) {
         await fs_extra_1.default.remove(skillTargetDir);
     }
@@ -26,5 +26,5 @@ async function remove() {
     if (await fs_extra_1.default.pathExists(paths.versionFilePath)) {
         await fs_extra_1.default.remove(paths.versionFilePath);
     }
-    console.log(chalk_1.default.green("MCP Manager removed successfully."));
+    console.log(chalk_1.default.green("Agent skill manager removed successfully."));
 }

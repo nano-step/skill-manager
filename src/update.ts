@@ -18,14 +18,14 @@ export async function update(): Promise<void> {
   await ensureDirExists(paths.commandDir);
   await ensureDirExists(paths.skillsDir);
 
-  const skillTargetDir = path.join(paths.skillsDir, "mcp-management");
-  const commandTargetPath = path.join(paths.commandDir, "mcp-refresh.md");
+  const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
+  const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   await ensureDirExists(skillTargetDir);
 
   const state = await getInstallationState(paths);
   if (state.installedVersion === PACKAGE_VERSION) {
-    console.log(chalk.green("MCP Manager is already up to date."));
+    console.log(chalk.green("Agent skill manager is already up to date."));
     return;
   }
 
@@ -63,5 +63,5 @@ export async function update(): Promise<void> {
   await writeJsonFile(paths.agentConfigPath, merged);
   await writeJsonFile(paths.versionFilePath, { version: PACKAGE_VERSION, updatedAt: new Date().toISOString() });
 
-  console.log(chalk.green("MCP Manager updated successfully."));
+  console.log(chalk.green("Agent skill manager updated successfully."));
 }

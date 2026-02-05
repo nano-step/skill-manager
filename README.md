@@ -6,7 +6,7 @@ CLI tool that installs and manages **AI agent skills** configuration into [OpenC
 
 When using many MCP (Model Context Protocol) tools, the tool definitions consume thousands of tokens in your main agent's context window. This tool creates a lightweight routing layer that:
 
-1. **Caches tool metadata** in `.opencode/mcp-tools.json`
+1. **Caches skill metadata** in `.opencode/agent-skill-tools.json`
 2. **Routes requests** to a specialized subagent (fast Haiku model)
 3. **Loads only relevant tools** when needed
 4. **Returns summarized results** back to the main agent
@@ -20,8 +20,8 @@ npx agent-skill-manager
 This will:
 - Detect your OpenCode config directory (`.opencode/` or `~/.config/opencode/`)
 - Install the agent skill management system
-- Install the `/mcp-refresh` command
-- Add the `mcp-manager` agent to `oh-my-opencode.json`
+- Install the `/agent-skill-refresh` command
+- Add the `agent-skill-manager` agent to `oh-my-opencode.json`
 
 ## Usage
 
@@ -51,20 +51,20 @@ Cleanly removes all installed artifacts.
 
 | Artifact | Location | Purpose |
 |----------|----------|---------|
-| Skill | `{config}/skills/mcp-management/` | Routing logic & documentation |
-| Command | `{config}/command/mcp-refresh.md` | Re-index MCP tools |
+| Skill | `{config}/skills/agent-skill-management/` | Routing logic & documentation |
+| Command | `{config}/command/agent-skill-refresh.md` | Re-index agent skills |
 | Agent | `{config}/oh-my-opencode.json` | Subagent configuration |
-| Version | `{config}/.mcp-manager-version.json` | Track installed version |
+| Version | `{config}/.agent-skill-version.json` | Track installed version |
 
 ## After Installation
 
-Run the `/mcp-refresh` command in OpenCode to create the initial tool cache:
+Run the `/agent-skill-refresh` command in OpenCode to create the initial tool cache:
 
 ```
-/mcp-refresh
+/agent-skill-refresh
 ```
 
-This analyzes all available MCP tools and creates a semantic index at `.opencode/mcp-tools.json`.
+This analyzes all available agent skills and creates a semantic index at `.opencode/agent-skill-tools.json`.
 
 ## Config Detection
 
@@ -126,13 +126,13 @@ Define prerequisite steps that automatically execute before certain tools:
 
 ```bash
 # Add a workflow from template
-/mcp-workflow add --template database
+/agent-skill-workflow add --template database
 
 # List active workflows
-/mcp-workflow list
+/agent-skill-workflow list
 
 # Disable temporarily
-/mcp-workflow disable database-safe-query
+/agent-skill-workflow disable database-safe-query
 ```
 
 **Built-in templates:**
@@ -178,7 +178,7 @@ agent-skill-manager/
 │   └── utils.ts           # Shared utilities
 ├── templates/              # Files to install
 │   ├── agent.json         # Agent configuration
-│   ├── command.md         # /mcp-refresh command
+│   ├── command-refresh.md         # /agent-skill-refresh command
 │   └── skill/             # Skill management system
 ├── bin/cli.js             # Executable entry
 └── dist/                  # Compiled output

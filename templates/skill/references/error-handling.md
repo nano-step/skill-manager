@@ -1,4 +1,4 @@
-# MCP Error Handling Reference
+# Agent Skill Error Handling Reference
 # Scope: recovery flows, templates, and decisioning.
 # Do not include routing logic, cache schema, or result summarization here.
 
@@ -12,7 +12,7 @@
 
 ## Automatic Retry Mechanism
 
-The mcp-manager automatically retries failed tool executions before returning errors.
+The agent-skill-manager automatically retries failed tool executions before returning errors.
 
 ### Retry Configuration
 - Maximum attempts: 3
@@ -67,7 +67,7 @@ Template:
 ```
 Error: Tool not found: <tool-id>
 Suggestions: <tool-a>, <tool-b>, <tool-c>
-Next: confirm the intended tool or run /mcp-refresh.
+Next: confirm the intended tool or run /agent-skill-refresh.
 ```
 
 ## Execution Failure Handling
@@ -113,18 +113,18 @@ Next: confirm retry with new parameters
 
 ## Cache Missing Recovery
 Symptoms:
-- `.opencode/mcp-tools.json` missing.
+- `.opencode/agent-skill-tools.json` missing.
 - Cache file invalid or unreadable.
 
 Recovery steps:
 1. Inform that cache is missing or invalid.
-2. Recommend /mcp-refresh to regenerate.
+2. Recommend /agent-skill-refresh to regenerate.
 3. Proceed with dynamic tool discovery if possible.
 
 Template:
 ```
-Cache missing or invalid at .opencode/mcp-tools.json
-Suggestion: run /mcp-refresh
+Cache missing or invalid at .opencode/agent-skill-tools.json
+Suggestion: run /agent-skill-refresh
 Fallback: dynamic discovery enabled
 ```
 
@@ -247,7 +247,7 @@ Decision tree (text form):
    - Yes -> request corrected params.
    - No -> continue.
 5. Is cache missing?
-   - Yes -> recommend /mcp-refresh and use dynamic discovery.
+   - Yes -> recommend /agent-skill-refresh and use dynamic discovery.
    - No -> continue.
 6. Unknown failure
    - Provide generic error template and ask for clarification.

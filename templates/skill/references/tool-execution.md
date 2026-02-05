@@ -1,13 +1,13 @@
-# MCP Tool Execution Reference
+# Agent Skill Tool Execution Reference
 # Scope: cache usage, routing, parameter mapping, orchestration.
 # Do not include category catalogs, result summarization, or error templates here.
 
 ## Cache Access and Reading
-Cache location: .opencode/mcp-tools.json
+Cache location: .opencode/agent-skill-tools.json
 Purpose: fast tool routing without reloading full MCP schemas.
 
 How to read the cache:
-1. Check if file exists at project root `.opencode/mcp-tools.json`.
+1. Check if file exists at project root `.opencode/agent-skill-tools.json`.
 2. Parse JSON into a structured object.
 3. Validate minimal fields: version, refreshed_at, tool_count, categories.
 4. If missing or malformed, fall back to dynamic discovery.
@@ -18,7 +18,7 @@ Cache staleness heuristic:
 
 ## Cache Schema (TypeScript Interface)
 ```ts
-interface McpToolCache {
+interface AgentSkillToolCache {
   version: string;
   refreshed_at: string; // ISO string
   mcp_servers: string[];
@@ -234,7 +234,7 @@ Tool: sequentialthinking { thought: "...", thoughtNumber: 1, totalThoughts: 4, n
 ## Cache Refresh Recommendation Text
 Recommended message:
 ```
-Cache appears stale or missing. Run /mcp-refresh to rebuild tool metadata.
+Cache appears stale or missing. Run /agent-skill-refresh to rebuild tool metadata.
 ```
 
 ## Execution Output Metadata (Internal)

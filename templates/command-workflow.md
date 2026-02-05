@@ -1,4 +1,4 @@
-# /mcp-workflow
+# /agent-skill-workflow
 
 Manage workflow rules that define prerequisite steps before tool execution.
 
@@ -11,7 +11,7 @@ Create, list, edit, and remove workflow definitions that automatically execute p
 ### List Workflows
 
 ```
-/mcp-workflow list
+/agent-skill-workflow list
 ```
 
 Display all defined workflows with their status, triggers, and prerequisite count.
@@ -36,7 +36,7 @@ Workflows (3 defined):
 ### Add Workflow (Interactive)
 
 ```
-/mcp-workflow add <name>
+/agent-skill-workflow add <name>
 ```
 
 Create a new workflow interactively. The agent will prompt for:
@@ -54,7 +54,7 @@ Create a new workflow interactively. The agent will prompt for:
 
 **Example session:**
 ```
-> /mcp-workflow add api-safety
+> /agent-skill-workflow add api-safety
 
 Description: Check API schema before making requests
 Trigger category (or skip): api
@@ -83,7 +83,7 @@ Mode (enforce/warn/suggest): warn
 ### Add from Template
 
 ```
-/mcp-workflow add --template <template-name>
+/agent-skill-workflow add --template <template-name>
 ```
 
 Create a workflow from a built-in template. Available templates:
@@ -97,7 +97,7 @@ Create a workflow from a built-in template. Available templates:
 
 **Example:**
 ```
-> /mcp-workflow add --template database
+> /agent-skill-workflow add --template database
 
 ✓ Created workflow 'database-safe-query' from template
   Mode: enforce
@@ -106,13 +106,13 @@ Create a workflow from a built-in template. Available templates:
 
 To list available templates:
 ```
-/mcp-workflow add --template
+/agent-skill-workflow add --template
 ```
 
 ### Edit Workflow
 
 ```
-/mcp-workflow edit <name>
+/agent-skill-workflow edit <name>
 ```
 
 Modify an existing workflow. Shows current values and allows changing any field.
@@ -120,13 +120,13 @@ Modify an existing workflow. Shows current values and allows changing any field.
 ### Remove Workflow
 
 ```
-/mcp-workflow remove <name>
+/agent-skill-workflow remove <name>
 ```
 
 Delete a workflow after confirmation.
 
 ```
-> /mcp-workflow remove api-safety
+> /agent-skill-workflow remove api-safety
 
 Remove workflow 'api-safety'? This cannot be undone. (yes/no): yes
 
@@ -136,14 +136,14 @@ Remove workflow 'api-safety'? This cannot be undone. (yes/no): yes
 ### Enable/Disable Workflow
 
 ```
-/mcp-workflow enable <name>
-/mcp-workflow disable <name>
+/agent-skill-workflow enable <name>
+/agent-skill-workflow disable <name>
 ```
 
 Toggle a workflow's enabled status without removing it.
 
 ```
-> /mcp-workflow disable database-safe-query
+> /agent-skill-workflow disable database-safe-query
 
 ✓ Workflow 'database-safe-query' disabled
   (Prerequisites will not run until re-enabled)
@@ -159,30 +159,30 @@ Toggle a workflow's enabled status without removing it.
 
 ## Storage
 
-Workflows are stored in `.opencode/mcp-tools.json` under the `workflows` key. They persist across sessions and are preserved when running `/mcp-refresh`.
+Workflows are stored in `.opencode/agent-skill-tools.json` under the `workflows` key. They persist across sessions and are preserved when running `/agent-skill-refresh`.
 
 ## Session State
 
-Completed prerequisites are tracked in `.opencode/.mcp-session.json`. Within a session, prerequisites only run once per workflow (unless the session expires after 24 hours).
+Completed prerequisites are tracked in `.opencode/.agent-skill-session.json`. Within a session, prerequisites only run once per workflow (unless the session expires after 24 hours).
 
 ## Examples
 
 ### Create a custom workflow for file operations
 ```
-/mcp-workflow add file-safety
+/agent-skill-workflow add file-safety
 ```
 Then define triggers for file tools and prerequisites like "list directory" before "delete file".
 
 ### Use database template and customize
 ```
-/mcp-workflow add --template database
-/mcp-workflow edit database-safe-query
+/agent-skill-workflow add --template database
+/agent-skill-workflow edit database-safe-query
 ```
 Modify the default database workflow to fit your needs.
 
 ### Temporarily disable a workflow
 ```
-/mcp-workflow disable browser-safe-interaction
+/agent-skill-workflow disable browser-safe-interaction
 # ... do some quick browser tasks without snapshots ...
-/mcp-workflow enable browser-safe-interaction
+/agent-skill-workflow enable browser-safe-interaction
 ```

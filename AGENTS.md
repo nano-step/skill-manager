@@ -1,6 +1,6 @@
 # AGENTS.md - agent-skill-manager
 
-> CLI tool that installs and manages AI agent skills, MCP tool routing, and workflow configurations.
+> CLI tool that installs and manages AI agent skills, agent skill tool routing, and workflow configurations.
 > Reduces token usage by 80-95% by isolating skill definitions in a dedicated subagent context.
 
 ## Quick Reference
@@ -57,8 +57,8 @@ agent-skill-manager/
 │   ├── remove.ts          # Clean removal logic
 │   └── utils.ts           # Shared utilities & types
 ├── templates/              # Files to install
-│   ├── agent.json         # mcp-manager agent config
-│   ├── command.md         # /mcp-refresh command
+│   ├── agent.json         # agent-skill-manager agent config
+│   ├── command-refresh.md         # /agent-skill-refresh command
 │   └── skill/             # Skill management system
 │       ├── SKILL.md       # Main skill document
 │       ├── assets/        # JSON templates
@@ -165,8 +165,8 @@ export async function readJsonFile<T>(filePath: string, fallback: T): Promise<T>
 Always use `path.join()` for cross-platform compatibility:
 
 ```typescript
-const skillTargetDir = path.join(paths.skillsDir, "mcp-management");
-const commandTargetPath = path.join(paths.commandDir, "mcp-refresh.md");
+const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
+const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 ```
 
 ## Key Implementation Details
@@ -180,10 +180,10 @@ const commandTargetPath = path.join(paths.commandDir, "mcp-refresh.md");
 
 | Artifact | Target Path |
 |----------|-------------|
-| Skill | `{config}/skills/mcp-management/` |
-| Command | `{config}/command/mcp-refresh.md` |
+| Skill | `{config}/skills/agent-skill-management/` |
+| Command | `{config}/command/agent-skill-refresh.md` |
 | Agent | Merged into `{config}/oh-my-opencode.json` |
-| Version | `{config}/.mcp-manager-version.json` |
+| Version | `{config}/.agent-skill-version.json` |
 
 ### Update Behavior
 
@@ -198,14 +198,14 @@ const commandTargetPath = path.join(paths.commandDir, "mcp-refresh.md");
 - Removes agent key from oh-my-opencode.json
 - Deletes version tracking file
 
-## MCP Manager Capabilities (v4.0.0)
+## Agent Skill Manager Capabilities (v4.0.0)
 
-The mcp-manager subagent supports these advanced features:
+The agent-skill-manager subagent supports these advanced features:
 
 ### Direct Passthrough
 Skip routing when exact tool name is provided (contains `__`):
 ```
-MetaMCP_chrome-devtools__take_screenshot → executes directly
+MetaAgentSkill_chrome-devtools__take_screenshot → executes directly
 ```
 
 ### Batch Operations
@@ -237,7 +237,7 @@ Automatic retry on failure:
 Define prerequisite steps that auto-execute before certain tools:
 ```bash
 # Add workflow from template
-/mcp-workflow add --template database
+/agent-skill-workflow add --template database
 
 # Creates workflow that runs: list_databases → list_tables → inspect_table
 # before any database query

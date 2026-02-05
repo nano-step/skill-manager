@@ -1,4 +1,4 @@
-# MCP Result Handling Reference
+# Agent Skill Result Handling Reference
 # Scope: summarization rules and response patterns.
 # Do not include routing, cache, or error recovery content here.
 

@@ -11,8 +11,8 @@ import {
 export async function remove(): Promise<void> {
   const paths = await detectOpenCodePaths();
 
-  const skillTargetDir = path.join(paths.skillsDir, "mcp-management");
-  const commandTargetPath = path.join(paths.commandDir, "mcp-refresh.md");
+  const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
+  const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   if (await fs.pathExists(skillTargetDir)) {
     await fs.remove(skillTargetDir);
@@ -32,5 +32,5 @@ export async function remove(): Promise<void> {
     await fs.remove(paths.versionFilePath);
   }
 
-  console.log(chalk.green("MCP Manager removed successfully."));
+  console.log(chalk.green("Agent skill manager removed successfully."));
 }

@@ -1,4 +1,4 @@
-# MCP Tool Categories Reference (Semantic)
+# Agent Skill Tool Categories Reference (Semantic)
 # Scope: semantic category mapping and example tool lists
 # Do not include routing algorithm, execution, results, or errors here.
 
@@ -6,7 +6,7 @@
 
 This skill uses **semantic categorization**:
 
-1. **Tool discovery** - `/mcp-refresh` enumerates all tools available to the agent
+1. **Tool discovery** - `/agent-skill-refresh` enumerates all tools available to the agent
 2. **Semantic analysis** - the AI reads each tool's **name + description**
 3. **Dynamic grouping** - tools are grouped into categories based on what they do
 
@@ -36,7 +36,7 @@ categories are **labels**, not fixed contracts, and can evolve with the tool set
 
 ## Cache File (v2.0.0) - How to Read It
 
-The `/mcp-refresh` command writes a cache file using the v2.0.0 schema. This
+The `/agent-skill-refresh` command writes a cache file using the v2.0.0 schema. This
 file is the **source of truth** for the current categorization state.
 
 ### Schema Overview

@@ -18,7 +18,7 @@ const path_1 = __importDefault(require("path"));
 const os_1 = __importDefault(require("os"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
 exports.PACKAGE_VERSION = "1.0.0";
-exports.AGENT_ID = "mcp-manager";
+exports.AGENT_ID = "agent-skill-manager";
 async function detectOpenCodePaths() {
     const homeConfig = path_1.default.join(os_1.default.homedir(), ".config", "opencode");
     const cwd = process.cwd();
@@ -34,9 +34,9 @@ async function detectOpenCodePaths() {
     const agentConfigPath = path_1.default.join(configDir, "oh-my-opencode.json");
     const packageRoot = path_1.default.join(__dirname, "..");
     const templateSkillDir = path_1.default.join(packageRoot, "templates", "skill");
-    const templateCommandPath = path_1.default.join(packageRoot, "templates", "command.md");
+    const templateCommandPath = path_1.default.join(packageRoot, "templates", "command-refresh.md");
     const templateAgentPath = path_1.default.join(packageRoot, "templates", "agent.json");
-    const versionFilePath = path_1.default.join(configDir, ".mcp-manager-version.json");
+    const versionFilePath = path_1.default.join(configDir, ".agent-skill-version.json");
     return {
         configDir,
         projectDir: cwd,
@@ -134,8 +134,8 @@ async function directoryDiffersFromTemplate(dirPath, templateDir) {
     return false;
 }
 async function getInstallationState(paths) {
-    const skillPath = path_1.default.join(paths.skillsDir, "mcp-management", "SKILL.md");
-    const commandPath = path_1.default.join(paths.commandDir, "mcp-refresh.md");
+    const skillPath = path_1.default.join(paths.skillsDir, "agent-skill-management", "SKILL.md");
+    const commandPath = path_1.default.join(paths.commandDir, "agent-skill-refresh.md");
     const [versionData, skillInstalled, commandInstalled] = await Promise.all([
         readJsonFile(paths.versionFilePath, {}),
         fs_extra_1.default.pathExists(skillPath),

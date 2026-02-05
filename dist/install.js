@@ -12,8 +12,8 @@ async function install() {
     const paths = await (0, utils_1.detectOpenCodePaths)();
     await (0, utils_1.ensureDirExists)(paths.commandDir);
     await (0, utils_1.ensureDirExists)(paths.skillsDir);
-    const skillTargetDir = path_1.default.join(paths.skillsDir, "mcp-management");
-    const commandTargetPath = path_1.default.join(paths.commandDir, "mcp-refresh.md");
+    const skillTargetDir = path_1.default.join(paths.skillsDir, "agent-skill-management");
+    const commandTargetPath = path_1.default.join(paths.commandDir, "agent-skill-refresh.md");
     await fs_extra_1.default.copy(paths.templateSkillDir, skillTargetDir, { overwrite: true });
     const commandTemplate = await (0, utils_1.readText)(paths.templateCommandPath);
     await (0, utils_1.writeText)(commandTargetPath, commandTemplate);
@@ -27,7 +27,7 @@ async function install() {
         throw new Error("Installation verification failed. Some files were not installed.");
     }
     if (Object.keys(agentConfig).length > 0 && Object.prototype.hasOwnProperty.call(agentConfig, utils_1.AGENT_ID)) {
-        console.log(chalk_1.default.yellow("mcp-manager agent already existed; configuration was updated."));
+        console.log(chalk_1.default.yellow("agent-skill-manager agent already existed; configuration was updated."));
     }
-    console.log(chalk_1.default.green("MCP Manager installed successfully."));
+    console.log(chalk_1.default.green("Agent skill manager installed successfully."));
 }

@@ -1,10 +1,10 @@
-# /mcp-refresh
+# /agent-skill-refresh
 
 Re-index and categorize all available MCP tools for intelligent routing.
 
 ## Purpose
 
-Create a semantic tool index in `.opencode/mcp-tools.json` by analyzing **all available tools** in the current agent context. Categorization is AI-only and based on tool names + descriptions (no prefixes).
+Create a semantic tool index in `.opencode/agent-skill-tools.json` by analyzing **all available tools** in the current agent context. Categorization is AI-only and based on tool names + descriptions (no prefixes).
 
 ## When to Run
 
@@ -15,10 +15,10 @@ Create a semantic tool index in `.opencode/mcp-tools.json` by analyzing **all av
 
 ## Auto-Refresh Triggers
 
-The mcp-manager will suggest running `/mcp-refresh` automatically when:
+The agent-skill-manager will suggest running `/agent-skill-refresh` automatically when:
 
 - **Tool not found**: A requested tool doesn't exist in the cache
-- **Cache missing**: The `.opencode/mcp-tools.json` file doesn't exist
+- **Cache missing**: The `.opencode/agent-skill-tools.json` file doesn't exist
 - **Cache stale**: The cache is older than 24 hours
 - **Tool count mismatch**: Available tools differ from cached count
 
@@ -59,7 +59,7 @@ Output as JSON.
 
 ### Step 3: Write Cache File (v2.0.0)
 
-Write `.opencode/mcp-tools.json` with this schema:
+Write `.opencode/agent-skill-tools.json` with this schema:
 
 ```json
 {
@@ -86,7 +86,7 @@ Write `.opencode/mcp-tools.json` with this schema:
 ### Step 4: Report Summary
 
 ```
-MCP Tools Index Refreshed:
+Agent Skill Tools Index Refreshed:
 
 Categories:
   - browser-automation: 25 tools
@@ -96,5 +96,5 @@ Categories:
 Summary:
   - Total tools: 75
   - Categories: 3
-  - Cache: .opencode/mcp-tools.json
+  - Cache: .opencode/agent-skill-tools.json
 ```

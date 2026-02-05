@@ -3,7 +3,7 @@ import os from "os";
 import fs from "fs-extra";
 
 export const PACKAGE_VERSION = "1.0.0";
-export const AGENT_ID = "mcp-manager";
+export const AGENT_ID = "agent-skill-manager";
 
 export interface OpenCodePaths {
   configDir: string;
@@ -43,9 +43,9 @@ export async function detectOpenCodePaths(): Promise<OpenCodePaths> {
 
   const packageRoot = path.join(__dirname, "..");
   const templateSkillDir = path.join(packageRoot, "templates", "skill");
-  const templateCommandPath = path.join(packageRoot, "templates", "command.md");
+  const templateCommandPath = path.join(packageRoot, "templates", "command-refresh.md");
   const templateAgentPath = path.join(packageRoot, "templates", "agent.json");
-  const versionFilePath = path.join(configDir, ".mcp-manager-version.json");
+  const versionFilePath = path.join(configDir, ".agent-skill-version.json");
 
   return {
     configDir,
@@ -163,8 +163,8 @@ export async function directoryDiffersFromTemplate(dirPath: string, templateDir:
 }
 
 export async function getInstallationState(paths: OpenCodePaths): Promise<InstallationState> {
-  const skillPath = path.join(paths.skillsDir, "mcp-management", "SKILL.md");
-  const commandPath = path.join(paths.commandDir, "mcp-refresh.md");
+  const skillPath = path.join(paths.skillsDir, "agent-skill-management", "SKILL.md");
+  const commandPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   const [versionData, skillInstalled, commandInstalled] = await Promise.all([
     readJsonFile<{ version?: string }>(paths.versionFilePath, {}),

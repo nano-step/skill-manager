@@ -18,8 +18,8 @@ export async function install(): Promise<void> {
   await ensureDirExists(paths.commandDir);
   await ensureDirExists(paths.skillsDir);
 
-  const skillTargetDir = path.join(paths.skillsDir, "mcp-management");
-  const commandTargetPath = path.join(paths.commandDir, "mcp-refresh.md");
+  const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
+  const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   await fs.copy(paths.templateSkillDir, skillTargetDir, { overwrite: true });
 
@@ -40,8 +40,8 @@ export async function install(): Promise<void> {
   }
 
   if (Object.keys(agentConfig).length > 0 && Object.prototype.hasOwnProperty.call(agentConfig, AGENT_ID)) {
-    console.log(chalk.yellow("mcp-manager agent already existed; configuration was updated."));
+    console.log(chalk.yellow("agent-skill-manager agent already existed; configuration was updated."));
   }
 
-  console.log(chalk.green("MCP Manager installed successfully."));
+  console.log(chalk.green("Agent skill manager installed successfully."));
 }

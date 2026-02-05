@@ -1,5 +1,5 @@
 export declare const PACKAGE_VERSION = "1.0.0";
-export declare const AGENT_ID = "mcp-manager";
+export declare const AGENT_ID = "agent-skill-manager";
 export interface OpenCodePaths {
     configDir: string;
     projectDir: string;

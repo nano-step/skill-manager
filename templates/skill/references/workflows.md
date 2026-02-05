@@ -1,4 +1,4 @@
-# MCP Workflow Reference
+# Agent Skill Workflow Reference
 
 Define prerequisite steps that automatically execute before certain tool operations.
 
@@ -70,7 +70,7 @@ Each prerequisite step has:
 
 ## Session State
 
-Completed prerequisites are tracked in `.opencode/.mcp-session.json`:
+Completed prerequisites are tracked in `.opencode/.agent-skill-session.json`:
 
 ```json
 {
@@ -202,26 +202,26 @@ Also matched: 'custom-db-workflow'
 
 ## Managing Workflows
 
-Use `/mcp-workflow` command:
+Use `/agent-skill-workflow` command:
 
 ```bash
 # List all workflows
-/mcp-workflow list
+/agent-skill-workflow list
 
 # Add from template
-/mcp-workflow add --template database
+/agent-skill-workflow add --template database
 
 # Add custom workflow
-/mcp-workflow add my-workflow
+/agent-skill-workflow add my-workflow
 
 # Edit existing
-/mcp-workflow edit my-workflow
+/agent-skill-workflow edit my-workflow
 
 # Disable temporarily
-/mcp-workflow disable my-workflow
+/agent-skill-workflow disable my-workflow
 
 # Remove
-/mcp-workflow remove my-workflow
+/agent-skill-workflow remove my-workflow
 ```
 
 ## Best Practices
@@ -230,4 +230,4 @@ Use `/mcp-workflow` command:
 2. **Use enforce sparingly** - Only for critical safety workflows
 3. **Keep prerequisites minimal** - Each step adds latency
 4. **Mark optional steps** - Use `required: false` for nice-to-have steps
-5. **Review session state** - Check `.mcp-session.json` if prerequisites seem stuck
+5. **Review session state** - Check `.agent-skill-session.json` if prerequisites seem stuck
