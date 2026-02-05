@@ -1,0 +1,4 @@
+[install.cache]
+# Disable global cache to prevent concurrent access race conditions
+# This fixes the FileNotFound errors when opencode runs parallel bun installs
+disable = true
