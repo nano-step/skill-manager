@@ -1,6 +1,6 @@
-# opencode-mcp-manager
+# agent-skill-manager
 
-CLI tool that installs the **MCP Manager subagent** configuration into [OpenCode](https://github.com/sst/opencode) projects. Reduces token usage by **80-95%** by isolating MCP tool definitions in a dedicated subagent context.
+CLI tool that installs and manages **AI agent skills** configuration into [OpenCode](https://github.com/sst/opencode) projects. Reduces token usage by **80-95%** by isolating skill definitions in a dedicated subagent context.
 
 ## Why?
 
@@ -14,12 +14,12 @@ When using many MCP (Model Context Protocol) tools, the tool definitions consume
 ## Installation
 
 ```bash
-npx opencode-mcp-manager
+npx agent-skill-manager
 ```
 
 This will:
 - Detect your OpenCode config directory (`.opencode/` or `~/.config/opencode/`)
-- Install the MCP Manager skill
+- Install the agent skill management system
 - Install the `/mcp-refresh` command
 - Add the `mcp-manager` agent to `oh-my-opencode.json`
 
@@ -28,13 +28,13 @@ This will:
 ### Install (first time)
 
 ```bash
-npx opencode-mcp-manager
+npx agent-skill-manager
 ```
 
 ### Update (to latest version)
 
 ```bash
-npx opencode-mcp-manager --update
+npx agent-skill-manager --update
 ```
 
 Creates timestamped backups of customized files before updating.
@@ -42,7 +42,7 @@ Creates timestamped backups of customized files before updating.
 ### Remove
 
 ```bash
-npx opencode-mcp-manager --remove
+npx agent-skill-manager --remove
 ```
 
 Cleanly removes all installed artifacts.
@@ -169,7 +169,7 @@ node bin/cli.js --remove # Remove
 ### Project Structure
 
 ```
-opencode-mcp-manager/
+agent-skill-manager/
 ├── src/                    # TypeScript source
 │   ├── index.ts           # CLI entry point
 │   ├── install.ts         # Installation logic
@@ -179,7 +179,7 @@ opencode-mcp-manager/
 ├── templates/              # Files to install
 │   ├── agent.json         # Agent configuration
 │   ├── command.md         # /mcp-refresh command
-│   └── skill/             # MCP Management skill
+│   └── skill/             # Skill management system
 ├── bin/cli.js             # Executable entry
 └── dist/                  # Compiled output
 ```

@@ -1,7 +1,7 @@
-# AGENTS.md - opencode-mcp-manager
+# AGENTS.md - agent-skill-manager
 
-> CLI tool that installs MCP Manager subagent configuration into OpenCode projects.
-> Reduces token usage by 80-95% by isolating MCP tool definitions in a dedicated subagent.
+> CLI tool that installs and manages AI agent skills, MCP tool routing, and workflow configurations.
+> Reduces token usage by 80-95% by isolating skill definitions in a dedicated subagent context.
 
 ## Quick Reference
 
@@ -49,7 +49,7 @@ node bin/cli.js --remove
 ## Project Structure
 
 ```
-opencode-mcp-manager/
+agent-skill-manager/
 ├── src/                    # TypeScript source
 │   ├── index.ts           # CLI entry point (Commander.js)
 │   ├── install.ts         # Fresh installation logic
@@ -59,7 +59,7 @@ opencode-mcp-manager/
 ├── templates/              # Files to install
 │   ├── agent.json         # mcp-manager agent config
 │   ├── command.md         # /mcp-refresh command
-│   └── skill/             # MCP Management skill
+│   └── skill/             # Skill management system
 │       ├── SKILL.md       # Main skill document
 │       ├── assets/        # JSON templates
 │       └── references/    # Detailed documentation
@@ -124,7 +124,7 @@ if (!hasHomeConfig && !hasProjectConfig) {
 **Console Output**: Use `chalk` for colored output.
 
 ```typescript
-console.log(chalk.green("MCP Manager installed successfully."));
+console.log(chalk.green("Agent skill manager installed successfully."));
 console.log(chalk.yellow("Detected customized files. Backups will be created."));
 console.error(chalk.red("Cannot use --update and --remove together."));
 ```

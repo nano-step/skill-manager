@@ -12,10 +12,10 @@ const remove_1 = require("./remove");
 async function run() {
     const program = new commander_1.Command();
     program
-        .name("opencode-mcp-manager")
-        .description("Install or manage the MCP Manager subagent")
-        .option("--update", "Update existing MCP Manager installation")
-        .option("--remove", "Remove MCP Manager installation")
+        .name("agent-skill-manager")
+        .description("Install and manage AI agent skills and configurations")
+        .option("--update", "Update existing agent skill installation")
+        .option("--remove", "Remove agent skill installation")
         .parse(process.argv);
     const options = program.opts();
     if (options.update && options.remove) {
