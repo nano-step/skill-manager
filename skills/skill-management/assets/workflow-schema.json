@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Agent Skill Workflow Definition",
-  "description": "Schema for defining prerequisite workflows in Agent Skill Manager",
+  "description": "Schema for defining prerequisite workflows in Skill Manager",
   "type": "object",
   "properties": {
     "enabled": {

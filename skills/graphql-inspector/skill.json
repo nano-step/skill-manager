@@ -1,0 +1,9 @@
+{
+  "name": "graphql-inspector",
+  "version": "1.0.0",
+  "description": "GraphQL schema inspection and query execution — progressive discovery workflow for token-efficient schema exploration",
+  "compatibility": "OpenCode with graphql-tools MCP server",
+  "agent": null,
+  "commands": [],
+  "tags": ["graphql", "schema", "inspection", "query"]
+}

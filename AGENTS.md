@@ -1,17 +1,18 @@
-# AGENTS.md - agent-skill-manager
+# AGENTS.md - @nano-step/skill-manager
 
-> CLI tool that installs and manages AI agent skills, agent skill tool routing, and workflow configurations.
-> Reduces token usage by 80-95% by isolating skill definitions in a dedicated subagent context.
+> Multi-skill registry CLI for OpenCode. Install, manage, and update AI agent skills from a built-in catalog.
 
 ## Quick Reference
 
 | Command | Description |
 |---------|-------------|
 | `npm run build` | Compile TypeScript to `dist/` |
-| `npx .` | Run locally (after build) |
-| `node bin/cli.js` | Direct execution |
-| `node bin/cli.js --update` | Update existing installation |
-| `node bin/cli.js --remove` | Remove installation |
+| `node bin/cli.js list` | Show available skills |
+| `node bin/cli.js install <name>` | Install a skill |
+| `node bin/cli.js install --all` | Install all skills |
+| `node bin/cli.js remove <name>` | Remove a skill |
+| `node bin/cli.js update [name]` | Update skill(s) |
+| `node bin/cli.js installed` | Show installed skills |
 
 ## Build & Development
 
@@ -21,7 +22,7 @@
 # Compile TypeScript
 npm run build
 
-# Watch mode (if available)
+# Watch mode
 npx tsc --watch
 
 # Type check only (no emit)
@@ -34,14 +35,12 @@ npx tsc --noEmit
 # Build first
 npm run build
 
-# Test install (requires .opencode or ~/.config/opencode)
-node bin/cli.js
-
-# Test update
-node bin/cli.js --update
-
-# Test remove
-node bin/cli.js --remove
+# Test all commands
+node bin/cli.js list
+node bin/cli.js install skill-management
+node bin/cli.js installed
+node bin/cli.js update
+node bin/cli.js remove skill-management
 ```
 
 **Note**: This project has no automated tests. Manual testing against a real OpenCode config is required.
@@ -49,23 +48,27 @@ node bin/cli.js --remove
 ## Project Structure
 
 ```
-agent-skill-manager/
-├── src/                    # TypeScript source
-│   ├── index.ts           # CLI entry point (Commander.js)
-│   ├── install.ts         # Fresh installation logic
-│   ├── update.ts          # Update with backup logic
-│   ├── remove.ts          # Clean removal logic
-│   └── utils.ts           # Shared utilities & types
-├── templates/              # Files to install
-│   ├── agent.json         # agent-skill-manager agent config
-│   ├── command-refresh.md         # /agent-skill-refresh command
-│   └── skill/             # Skill management system
-│       ├── SKILL.md       # Main skill document
-│       ├── assets/        # JSON templates
-│       └── references/    # Detailed documentation
-├── bin/cli.js             # Executable entry point
-├── dist/                  # Compiled output (CommonJS)
-└── tsconfig.json          # TypeScript config
+skill-manager/
+├── src/
+│   ├── index.ts          # CLI entry (commander subcommands)
+│   ├── registry.ts       # Scan skills/ dirs, load/validate manifests
+│   ├── installer.ts      # Install/remove/update logic (per-skill)
+│   ├── state.ts          # Read/write .skill-manager.json, v4 migration
+│   ├── config.ts         # Merge agents/commands into oh-my-opencode.json
+│   └── utils.ts          # Path detection, file ops, shared types
+├── skills/               # Built-in skill catalog
+│   ├── skill-management/
+│   │   ├── skill.json    # Skill manifest
+│   │   ├── SKILL.md
+│   │   ├── skill-refresh.md
+│   │   ├── references/
+│   │   └── assets/
+│   └── graphql-inspector/
+│       ├── skill.json
+│       └── SKILL.md
+├── bin/cli.js            # Executable entry point
+├── dist/                 # Compiled output (CommonJS)
+└── tsconfig.json
 ```
 
 ## Code Style Guidelines
@@ -81,92 +84,74 @@ agent-skill-manager/
 
 1. Node.js built-ins (`path`, `os`)
 2. External packages (`chalk`, `commander`, `fs-extra`)
-3. Internal modules (`./utils`)
+3. Internal modules (`./utils`, `./registry`)
 
 ```typescript
 import path from "path";
-import os from "os";
 import fs from "fs-extra";
 import chalk from "chalk";
-import { detectOpenCodePaths, ensureDirExists } from "./utils";
+import { OpenCodePaths, SkillManifest, MANAGER_VERSION } from "./utils";
 ```
 
 ### Naming Conventions
 
 | Type | Convention | Example |
 |------|------------|---------|
-| Files | kebab-case | `install.ts`, `utils.ts` |
-| Functions | camelCase | `detectOpenCodePaths`, `ensureDirExists` |
-| Interfaces | PascalCase | `OpenCodePaths`, `InstallationState` |
-| Constants | SCREAMING_SNAKE | `PACKAGE_VERSION`, `AGENT_ID` |
-| Variables | camelCase | `configDir`, `skillTargetDir` |
+| Files | kebab-case | `installer.ts`, `registry.ts` |
+| Functions | camelCase | `detectOpenCodePaths`, `loadCatalog` |
+| Interfaces | PascalCase | `OpenCodePaths`, `SkillManifest`, `ManagerState` |
+| Constants | SCREAMING_SNAKE | `MANAGER_VERSION` |
+| Variables | camelCase | `configDir`, `packageSkillsDir` |
 
 ### Function Patterns
 
 **Async/Await**: All file operations use async/await with fs-extra.
 
 ```typescript
-export async function install(): Promise<void> {
-  const paths = await detectOpenCodePaths();
-  await ensureDirExists(paths.commandDir);
+export async function installSkill(name: string, paths: OpenCodePaths): Promise<void> {
+  const manifest = await getSkillManifest(paths.packageSkillsDir, name);
   // ...
 }
 ```
 
-**Error Handling**: Throw errors with descriptive messages. CLI catches at top level.
+**Error Handling**: Use `console.error` + `process.exit(1)` for user-facing errors. Throw for programming errors.
 
 ```typescript
-if (!hasHomeConfig && !hasProjectConfig) {
-  throw new Error("OpenCode config not found. Expected ~/.config/opencode or .opencode in project.");
+if (!manifest) {
+  console.error(chalk.red(`Skill "${name}" not found in catalog.`));
+  process.exit(1);
 }
 ```
 
-**Console Output**: Use `chalk` for colored output.
+**Console Output**: Use `chalk` for colored output. `console.log` for normal output, `console.error` for errors/warnings.
+
+### Key Interfaces
 
 ```typescript
-console.log(chalk.green("Agent skill manager installed successfully."));
-console.log(chalk.yellow("Detected customized files. Backups will be created."));
-console.error(chalk.red("Cannot use --update and --remove together."));
-```
+export interface SkillManifest {
+  name: string;
+  version: string;
+  description: string;
+  compatibility?: string;
+  agent?: { id: string; config: Record<string, unknown> } | null;
+  commands?: string[];
+  tags?: string[];
+}
 
-### Type Definitions
+export interface ManagerState {
+  version: number;
+  managerVersion: string;
+  skills: Record<string, InstalledSkillInfo>;
+}
 
-Define interfaces for complex return types:
-
-```typescript
 export interface OpenCodePaths {
   configDir: string;
-  projectDir: string;
   commandDir: string;
   skillsDir: string;
   agentConfigPath: string;
-  versionFilePath: string;
-  templateSkillDir: string;
-  templateCommandPath: string;
-  templateAgentPath: string;
+  stateFilePath: string;
+  packageSkillsDir: string;
 }
-```
-
-### JSON File Handling
-
-Use generic helpers with fallback defaults:
-
-```typescript
-export async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
-  const exists = await fs.pathExists(filePath);
-  if (!exists) return fallback;
-  const data = await fs.readFile(filePath, "utf8");
-  return JSON.parse(data) as T;
-}
-```
-
-### Path Construction
-
-Always use `path.join()` for cross-platform compatibility:
-
-```typescript
-const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
-const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 ```
 
 ## Key Implementation Details
@@ -176,82 +161,25 @@ const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 1. Project-level `.opencode/` (preferred)
 2. Global `~/.config/opencode/`
 
-### Installation Artifacts
+### Installation Artifacts (per skill)
 
 | Artifact | Target Path |
 |----------|-------------|
-| Skill | `{config}/skills/agent-skill-management/` |
-| Command | `{config}/command/agent-skill-refresh.md` |
-| Agent | Merged into `{config}/oh-my-opencode.json` |
-| Version | `{config}/.agent-skill-version.json` |
+| Skill files | `{config}/skills/{name}/` |
+| Commands | `{config}/command/{cmd}` (from manifest `commands` array) |
+| Agent config | Merged into `{config}/oh-my-opencode.json` under `agents` key |
+| State | `{config}/.skill-manager.json` (shared across all skills) |
 
-### Update Behavior
+### Module Responsibilities
 
-- Creates timestamped backups before overwriting
-- Detects customized files and warns user
-- Skips if already at current version
-
-### Remove Behavior
-
-- Deletes skill directory
-- Deletes command file
-- Removes agent key from oh-my-opencode.json
-- Deletes version tracking file
-
-## Agent Skill Manager Capabilities (v4.0.0)
-
-The agent-skill-manager subagent supports these advanced features:
-
-### Direct Passthrough
-Skip routing when exact tool name is provided (contains `__`):
-```
-MetaAgentSkill_chrome-devtools__take_screenshot → executes directly
-```
-
-### Batch Operations
-Execute multiple tools in one request:
-```
-BATCH: [{"tool": "screenshot"}, {"tool": "get_title"}]
-```
-- Maximum 10 tools per batch
-- Returns array of results
-
-### Tool Chaining
-Chain tools with output passing:
-```
-CHAIN: [
-  {"tool": "get_element", "params": {"selector": "#btn"}, "output_as": "el"},
-  {"tool": "click", "params": {"element": "$el"}}
-]
-```
-- Use `$varname` for variable substitution
-- Maximum 5 tools per chain
-
-### Retry Mechanism
-Automatic retry on failure:
-- Up to 3 attempts
-- Delays: 0s → 1s → 2s
-- Returns detailed failure report if all attempts fail
-
-### Workflows (v4.0.0)
-Define prerequisite steps that auto-execute before certain tools:
-```bash
-# Add workflow from template
-/agent-skill-workflow add --template database
-
-# Creates workflow that runs: list_databases → list_tables → inspect_table
-# before any database query
-```
-
-Built-in templates:
-- `database`: Inspect structure before queries
-- `browser`: Take snapshot before clicking
-- `github-pr`: Review PR before merging
-
-Workflow modes:
-- `enforce`: Auto-run prerequisites (default)
-- `warn`: Show warning, allow skip
-- `suggest`: Mention only
+| Module | Responsibility |
+|--------|---------------|
+| `registry.ts` | Scan `skills/*/skill.json`, validate manifests, return catalog |
+| `state.ts` | Read/write `.skill-manager.json`, v4→v5 migration |
+| `config.ts` | Merge/remove agent configs in `oh-my-opencode.json`, copy/remove commands |
+| `installer.ts` | Orchestrate install/remove/update using registry + state + config |
+| `index.ts` | CLI entry, commander subcommands, legacy flag detection |
+| `utils.ts` | Path detection, file helpers, shared types/interfaces |
 
 ## Dependencies
 
@@ -263,25 +191,26 @@ Workflow modes:
 
 ## Common Tasks
 
-### Adding a New Template File
+### Adding a New Skill
 
-1. Add file to `templates/`
-2. Update `OpenCodePaths` interface in `utils.ts`
-3. Update `detectOpenCodePaths()` to include new path
-4. Update `install.ts`, `update.ts`, `remove.ts` to handle new file
+1. Create `skills/<name>/` directory
+2. Add `skill.json` manifest with required fields (`name`, `version`, `description`)
+3. Add `SKILL.md` with skill instructions
+4. Optionally add `agent` config and `commands` to manifest
+5. Build and test: `npm run build && node bin/cli.js list`
 
 ### Updating Version
 
-1. Update `PACKAGE_VERSION` in `src/utils.ts`
-2. Update version in `package-lock.json`
+1. Update `MANAGER_VERSION` in `src/utils.ts`
+2. Update `version` in `package.json`
 3. Rebuild: `npm run build`
 
 ### Debugging
 
 ```bash
 # Run with Node debugger
-node --inspect bin/cli.js
+node --inspect bin/cli.js list
 
 # Check compiled output
-cat dist/install.js
+ls dist/
 ```

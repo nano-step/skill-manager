@@ -70,7 +70,7 @@ Each prerequisite step has:
 
 ## Session State
 
-Completed prerequisites are tracked in `.opencode/.agent-skill-session.json`:
+Completed prerequisites are tracked in `.opencode/.skill-session.json`:
 
 ```json
 {
@@ -202,26 +202,26 @@ Also matched: 'custom-db-workflow'
 
 ## Managing Workflows
 
-Use `/agent-skill-workflow` command:
+Use `/skill-workflow` command:
 
 ```bash
 # List all workflows
-/agent-skill-workflow list
+/skill-workflow list
 
 # Add from template
-/agent-skill-workflow add --template database
+/skill-workflow add --template database
 
 # Add custom workflow
-/agent-skill-workflow add my-workflow
+/skill-workflow add my-workflow
 
 # Edit existing
-/agent-skill-workflow edit my-workflow
+/skill-workflow edit my-workflow
 
 # Disable temporarily
-/agent-skill-workflow disable my-workflow
+/skill-workflow disable my-workflow
 
 # Remove
-/agent-skill-workflow remove my-workflow
+/skill-workflow remove my-workflow
 ```
 
 ## Best Practices
@@ -230,4 +230,4 @@ Use `/agent-skill-workflow` command:
 2. **Use enforce sparingly** - Only for critical safety workflows
 3. **Keep prerequisites minimal** - Each step adds latency
 4. **Mark optional steps** - Use `required: false` for nice-to-have steps
-5. **Review session state** - Check `.agent-skill-session.json` if prerequisites seem stuck
+5. **Review session state** - Check `.skill-session.json` if prerequisites seem stuck

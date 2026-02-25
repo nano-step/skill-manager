@@ -3,11 +3,11 @@
 # Do not include category catalogs, result summarization, or error templates here.
 
 ## Cache Access and Reading
-Cache location: .opencode/agent-skill-tools.json
-Purpose: fast tool routing without reloading full MCP schemas.
+Cache location: .opencode/skill-tools.json
+Purpose: fast tool routing without reloading full tool schemas.
 
 How to read the cache:
-1. Check if file exists at project root `.opencode/agent-skill-tools.json`.
+1. Check if file exists at project root `.opencode/skill-tools.json`.
 2. Parse JSON into a structured object.
 3. Validate minimal fields: version, refreshed_at, tool_count, categories.
 4. If missing or malformed, fall back to dynamic discovery.
@@ -18,10 +18,10 @@ Cache staleness heuristic:
 
 ## Cache Schema (TypeScript Interface)
 ```ts
-interface AgentSkillToolCache {
+interface SkillToolCache {
   version: string;
   refreshed_at: string; // ISO string
-  mcp_servers: string[];
+  tool_sources: string[];
   tool_count: number;
   categories: {
     [name: string]: {
@@ -156,7 +156,7 @@ params: { fullPage: true }
 ## When to Avoid Cache
 - During tool upgrades or when discrepancies are reported.
 - When a tool id from cache fails execution.
-- When the user references a new MCP server prefix.
+- When the user references a new tool server prefix.
 
 ## Execution Prerequisites
 - Ensure selected tool exists in cache or registry.
@@ -234,7 +234,7 @@ Tool: sequentialthinking { thought: "...", thoughtNumber: 1, totalThoughts: 4, n
 ## Cache Refresh Recommendation Text
 Recommended message:
 ```
-Cache appears stale or missing. Run /agent-skill-refresh to rebuild tool metadata.
+Cache appears stale or missing. Run /skill-refresh to rebuild tool metadata.
 ```
 
 ## Execution Output Metadata (Internal)

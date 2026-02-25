@@ -1,211 +1,116 @@
 # @nano-step/skill-manager
 
-CLI tool that installs and manages **AI agent skills** into [OpenCode](https://github.com/sst/opencode) projects. Reduces token usage by **80-95%** by isolating MCP tool definitions in a dedicated subagent context.
+Multi-skill registry CLI for [OpenCode](https://github.com/sst/opencode). Install, manage, and update AI agent skills from a built-in catalog.
 
-## Why?
-
-When using many MCP (Model Context Protocol) tools, the tool definitions consume thousands of tokens in your main agent's context window. This tool creates a lightweight routing layer that:
-
-1. **Installs a skill** (`mcp-management`) with routing logic and documentation
-2. **Configures a subagent** (`mcp-manager`) using a fast, cheap model
-3. **Caches tool metadata** in `.opencode/mcp-tools.json` for instant routing
-4. **Returns summarized results** — main agent stays lean
-
-## Installation
+## Quick Start
 
 ```bash
-npx @nano-step/skill-manager
+# List available skills
+npx @nano-step/skill-manager list
+
+# Install a skill
+npx @nano-step/skill-manager install skill-management
+
+# Install all skills
+npx @nano-step/skill-manager install --all
 ```
 
-This will:
-- Detect your OpenCode config directory (`.opencode/` or `~/.config/opencode/`)
-- Install the `mcp-management` skill with routing logic
-- Install the `/mcp-refresh` command
-- Add the `mcp-manager` subagent to `oh-my-opencode.json`
+## Commands
 
-## Usage
+| Command | Description |
+|---------|-------------|
+| `list` | Show available skills from the catalog |
+| `install <name>` | Install a specific skill |
+| `install --all` | Install all available skills |
+| `remove <name>` | Remove an installed skill |
+| `update [name]` | Update one or all installed skills |
+| `installed` | Show currently installed skills |
 
-### Install (first time)
+## Available Skills
 
-```bash
-npx @nano-step/skill-manager
-```
-
-### Update (to latest version)
-
-```bash
-npx @nano-step/skill-manager --update
-```
-
-Creates timestamped backups of customized files before updating.
-
-### Remove
-
-```bash
-npx @nano-step/skill-manager --remove
-```
-
-Cleanly removes all installed artifacts.
+| Skill | Description |
+|-------|-------------|
+| `skill-management` | AI skill routing — isolates tool definitions in subagent context to save 80-95% tokens |
+| `graphql-inspector` | GraphQL schema inspection with progressive discovery workflow |
 
 ## What Gets Installed
 
-| Artifact | Location | Purpose |
-|----------|----------|---------|
-| Skill | `{config}/skills/mcp-management/` | Routing logic & documentation |
-| Command | `{config}/command/agent-skill-refresh.md` | Re-index MCP tools |
-| Agent | `{config}/oh-my-opencode.json` | `mcp-manager` subagent config |
-| Version | `{config}/.agent-skill-version.json` | Track installed version |
+When you install a skill, the manager:
 
-## After Installation
+1. Copies skill files (SKILL.md, references, assets) to `{config}/skills/{name}/`
+2. Copies command files to `{config}/command/` (if the skill has commands)
+3. Merges agent config into `{config}/oh-my-opencode.json` (if the skill defines an agent)
+4. Tracks installation state in `{config}/.skill-manager.json`
 
-Run the refresh command in OpenCode to create the initial tool cache:
+Config directory is detected automatically: `.opencode/` (project-level, preferred) or `~/.config/opencode/` (global).
 
-```
-/agent-skill-refresh
-```
+## Migrating from v4
 
-This analyzes all available MCP tools and creates a semantic index at `.opencode/mcp-tools.json`.
+v5.0.0 replaces the flag-based CLI with subcommands:
 
-## Config Detection
+| v4 (old) | v5 (new) |
+|----------|----------|
+| `npx @nano-step/skill-manager` | `npx @nano-step/skill-manager install skill-management` |
+| `npx @nano-step/skill-manager --update` | `npx @nano-step/skill-manager update` |
+| `npx @nano-step/skill-manager --remove` | `npx @nano-step/skill-manager remove skill-management` |
 
-The tool looks for OpenCode configuration in this order:
-
-1. **Project-level**: `.opencode/` in current directory (preferred)
-2. **Global**: `~/.config/opencode/`
-
-## How It Works
-
-```
-User request → Main agent (Opus/Sonnet)
-  ↓ delegates MCP task
-  mcp-manager subagent (Haiku — fast & cheap)
-  ↓ reads .opencode/mcp-tools.json cache
-  ↓ routes to correct MCP tool category
-  ↓ executes tool, summarizes result
-  ↓ returns to main agent
-Main agent continues with minimal token cost
-```
-
-### Tool Categories
-
-| Category | Tools | Example |
-|----------|-------|---------|
-| browser | chrome-devtools__* | Screenshots, clicks, navigation |
-| github | github-*__* | PRs, issues, repos |
-| graphql | graphql-tools__* | Schema inspection, queries |
-| docs | context7__* | Documentation lookup |
-| reasoning | Sequential-Thinking__* | Complex analysis |
-
-## Advanced Features (v4.0.0)
-
-### Direct Passthrough
-
-Skip routing when you know the exact tool name:
-
-```
-MetaMCP_chrome-devtools__take_screenshot
-```
-
-Any tool name containing `__` executes directly without category lookup.
-
-### Batch Operations
-
-Execute multiple tools in one request:
-
-```
-BATCH: [
-  {"tool": "screenshot", "params": {}},
-  {"tool": "get_title", "params": {}}
-]
-```
-
-- Maximum 10 tools per batch
-- Returns array of results in execution order
-
-### Tool Chaining
-
-Chain tools with output passing:
-
-```
-CHAIN: [
-  {"tool": "get_element", "params": {"selector": "#btn"}, "output_as": "el"},
-  {"tool": "click", "params": {"element": "$el"}}
-]
-```
-
-- Use `$varname` to reference previous outputs
-- Maximum 5 tools per chain
-
-### Automatic Retry
-
-All tool executions automatically retry on failure:
-
-- Up to 3 attempts with delays: 0s → 1s → 2s
-- Returns detailed failure report if all attempts fail
-
-### Workflows
-
-Define prerequisite steps that automatically execute before certain tools:
-
-```bash
-# Add a workflow from template
-/agent-skill-workflow add --template database
-
-# List active workflows
-/agent-skill-workflow list
-
-# Disable temporarily
-/agent-skill-workflow disable database-safe-query
-```
-
-**Built-in templates:**
-
-| Template | Description | Prerequisites |
-|----------|-------------|---------------|
-| `database` | Safe database queries | list_databases → list_tables → inspect_table |
-| `browser` | Safe browser interaction | take_snapshot |
-| `github-pr` | PR review workflow | get_pr → get_files → get_status |
-
-**Workflow modes:**
-- `enforce`: Auto-run prerequisites (default)
-- `warn`: Show warning, allow skip
-- `suggest`: Mention only, don't block
+Existing v4 installations are automatically migrated on first run.
 
 ## Development
-
-### Build
 
 ```bash
 npm install
 npm run build
-```
 
-### Test Locally
-
-```bash
-# After building
-node bin/cli.js          # Install
-node bin/cli.js --update # Update
-node bin/cli.js --remove # Remove
+# Test locally
+node bin/cli.js list
+node bin/cli.js install skill-management
+node bin/cli.js installed
+node bin/cli.js remove skill-management
 ```
 
 ### Project Structure
 
 ```
 skill-manager/
-├── src/                    # TypeScript source
-│   ├── index.ts           # CLI entry point
-│   ├── install.ts         # Installation logic
-│   ├── update.ts          # Update with backup
-│   ├── remove.ts          # Clean removal
-│   └── utils.ts           # Shared utilities
-├── templates/              # Files to install
-│   ├── agent.json         # mcp-manager agent config
-│   ├── command-refresh.md # /agent-skill-refresh command
-│   └── skill/             # mcp-management skill
-├── bin/cli.js             # Executable entry
-└── dist/                  # Compiled output
+├── src/
+│   ├── index.ts          # CLI entry (commander subcommands)
+│   ├── registry.ts       # Scan skills/ dirs, load manifests
+│   ├── installer.ts      # Install/remove/update logic
+│   ├── state.ts          # Read/write .skill-manager.json
+│   ├── config.ts         # Merge agents/commands into oh-my-opencode.json
+│   └── utils.ts          # Path detection, file ops, shared types
+├── skills/
+│   ├── skill-management/
+│   │   ├── skill.json    # Skill manifest
+│   │   ├── SKILL.md      # Skill instructions
+│   │   ├── skill-refresh.md
+│   │   ├── references/   # Detailed documentation
+│   │   └── assets/       # Templates and schemas
+│   └── graphql-inspector/
+│       ├── skill.json
+│       └── SKILL.md
+├── bin/cli.js
+└── package.json
 ```
+
+### Adding a New Skill
+
+1. Create `skills/<name>/` directory
+2. Add `skill.json` manifest:
+   ```json
+   {
+     "name": "<name>",
+     "version": "1.0.0",
+     "description": "...",
+     "compatibility": "OpenCode with ...",
+     "agent": null,
+     "commands": [],
+     "tags": ["..."]
+   }
+   ```
+3. Add `SKILL.md` with skill instructions
+4. Build and test: `npm run build && node bin/cli.js list`
 
 ## Related Projects
 
