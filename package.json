@@ -1,11 +1,11 @@
 {
-  "name": "agent-skill-manager",
+  "name": "@nano-step/skill-manager",
   "version": "4.0.0",
   "description": "CLI tool that installs and manages AI agent skills, MCP tool routing, and workflow configurations.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "agent-skill-manager": "bin/cli.js"
+    "skill-manager": "bin/cli.js"
   },
   "files": [
     "bin",
@@ -17,6 +17,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "nano-step",
     "opencode",
     "mcp",
     "model-context-protocol",
@@ -24,11 +25,11 @@
     "llm",
     "cli"
   ],
-  "author": "Sisyphus",
+  "author": "nano-step",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/opencode/agent-skill-manager"
+    "url": "https://github.com/nano-step/skill-manager"
   },
   "engines": {
     "node": ">=18"

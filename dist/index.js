@@ -12,7 +12,7 @@ const remove_1 = require("./remove");
 async function run() {
     const program = new commander_1.Command();
     program
-        .name("agent-skill-manager")
+        .name("skill-manager")
         .description("Install and manage AI agent skills and configurations")
         .option("--update", "Update existing agent skill installation")
         .option("--remove", "Remove agent skill installation")

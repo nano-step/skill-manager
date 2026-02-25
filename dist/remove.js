@@ -10,7 +10,7 @@ const fs_extra_1 = __importDefault(require("fs-extra"));
 const utils_1 = require("./utils");
 async function remove() {
     const paths = await (0, utils_1.detectOpenCodePaths)();
-    const skillTargetDir = path_1.default.join(paths.skillsDir, "agent-skill-management");
+    const skillTargetDir = path_1.default.join(paths.skillsDir, utils_1.SKILL_DIR_NAME);
     const commandTargetPath = path_1.default.join(paths.commandDir, "agent-skill-refresh.md");
     if (await fs_extra_1.default.pathExists(skillTargetDir)) {
         await fs_extra_1.default.remove(skillTargetDir);
@@ -19,9 +19,11 @@ async function remove() {
         await fs_extra_1.default.remove(commandTargetPath);
     }
     const agentConfig = await (0, utils_1.readJsonFile)(paths.agentConfigPath, {});
-    if (Object.prototype.hasOwnProperty.call(agentConfig, utils_1.AGENT_ID)) {
-        const { [utils_1.AGENT_ID]: _removed, ...rest } = agentConfig;
-        await (0, utils_1.writeJsonFile)(paths.agentConfigPath, rest);
+    const agents = (agentConfig.agents || {});
+    if (Object.prototype.hasOwnProperty.call(agents, utils_1.AGENT_ID)) {
+        delete agents[utils_1.AGENT_ID];
+        agentConfig.agents = agents;
+        await (0, utils_1.writeJsonFile)(paths.agentConfigPath, agentConfig);
     }
     if (await fs_extra_1.default.pathExists(paths.versionFilePath)) {
         await fs_extra_1.default.remove(paths.versionFilePath);

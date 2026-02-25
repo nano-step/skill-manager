@@ -3,6 +3,7 @@ import chalk from "chalk";
 import fs from "fs-extra";
 import {
   AGENT_ID,
+  SKILL_DIR_NAME,
   detectOpenCodePaths,
   readJsonFile,
   writeJsonFile,
@@ -11,7 +12,7 @@ import {
 export async function remove(): Promise<void> {
   const paths = await detectOpenCodePaths();
 
-  const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
+  const skillTargetDir = path.join(paths.skillsDir, SKILL_DIR_NAME);
   const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   if (await fs.pathExists(skillTargetDir)) {
@@ -23,9 +24,11 @@ export async function remove(): Promise<void> {
   }
 
   const agentConfig = await readJsonFile<Record<string, unknown>>(paths.agentConfigPath, {});
-  if (Object.prototype.hasOwnProperty.call(agentConfig, AGENT_ID)) {
-    const { [AGENT_ID]: _removed, ...rest } = agentConfig;
-    await writeJsonFile(paths.agentConfigPath, rest);
+  const agents = (agentConfig.agents || {}) as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(agents, AGENT_ID)) {
+    delete agents[AGENT_ID];
+    agentConfig.agents = agents;
+    await writeJsonFile(paths.agentConfigPath, agentConfig);
   }
 
   if (await fs.pathExists(paths.versionFilePath)) {

@@ -1,40 +1,40 @@
-# agent-skill-manager
+# @nano-step/skill-manager
 
-CLI tool that installs and manages **AI agent skills** configuration into [OpenCode](https://github.com/sst/opencode) projects. Reduces token usage by **80-95%** by isolating skill definitions in a dedicated subagent context.
+CLI tool that installs and manages **AI agent skills** into [OpenCode](https://github.com/sst/opencode) projects. Reduces token usage by **80-95%** by isolating MCP tool definitions in a dedicated subagent context.
 
 ## Why?
 
 When using many MCP (Model Context Protocol) tools, the tool definitions consume thousands of tokens in your main agent's context window. This tool creates a lightweight routing layer that:
 
-1. **Caches skill metadata** in `.opencode/agent-skill-tools.json`
-2. **Routes requests** to a specialized subagent (fast Haiku model)
-3. **Loads only relevant tools** when needed
-4. **Returns summarized results** back to the main agent
+1. **Installs a skill** (`mcp-management`) with routing logic and documentation
+2. **Configures a subagent** (`mcp-manager`) using a fast, cheap model
+3. **Caches tool metadata** in `.opencode/mcp-tools.json` for instant routing
+4. **Returns summarized results** — main agent stays lean
 
 ## Installation
 
 ```bash
-npx agent-skill-manager
+npx @nano-step/skill-manager
 ```
 
 This will:
 - Detect your OpenCode config directory (`.opencode/` or `~/.config/opencode/`)
-- Install the agent skill management system
-- Install the `/agent-skill-refresh` command
-- Add the `agent-skill-manager` agent to `oh-my-opencode.json`
+- Install the `mcp-management` skill with routing logic
+- Install the `/mcp-refresh` command
+- Add the `mcp-manager` subagent to `oh-my-opencode.json`
 
 ## Usage
 
 ### Install (first time)
 
 ```bash
-npx agent-skill-manager
+npx @nano-step/skill-manager
 ```
 
 ### Update (to latest version)
 
 ```bash
-npx agent-skill-manager --update
+npx @nano-step/skill-manager --update
 ```
 
 Creates timestamped backups of customized files before updating.
@@ -42,7 +42,7 @@ Creates timestamped backups of customized files before updating.
 ### Remove
 
 ```bash
-npx agent-skill-manager --remove
+npx @nano-step/skill-manager --remove
 ```
 
 Cleanly removes all installed artifacts.
@@ -51,20 +51,20 @@ Cleanly removes all installed artifacts.
 
 | Artifact | Location | Purpose |
 |----------|----------|---------|
-| Skill | `{config}/skills/agent-skill-management/` | Routing logic & documentation |
-| Command | `{config}/command/agent-skill-refresh.md` | Re-index agent skills |
-| Agent | `{config}/oh-my-opencode.json` | Subagent configuration |
+| Skill | `{config}/skills/mcp-management/` | Routing logic & documentation |
+| Command | `{config}/command/agent-skill-refresh.md` | Re-index MCP tools |
+| Agent | `{config}/oh-my-opencode.json` | `mcp-manager` subagent config |
 | Version | `{config}/.agent-skill-version.json` | Track installed version |
 
 ## After Installation
 
-Run the `/agent-skill-refresh` command in OpenCode to create the initial tool cache:
+Run the refresh command in OpenCode to create the initial tool cache:
 
 ```
 /agent-skill-refresh
 ```
 
-This analyzes all available agent skills and creates a semantic index at `.opencode/agent-skill-tools.json`.
+This analyzes all available MCP tools and creates a semantic index at `.opencode/mcp-tools.json`.
 
 ## Config Detection
 
@@ -72,6 +72,29 @@ The tool looks for OpenCode configuration in this order:
 
 1. **Project-level**: `.opencode/` in current directory (preferred)
 2. **Global**: `~/.config/opencode/`
+
+## How It Works
+
+```
+User request → Main agent (Opus/Sonnet)
+  ↓ delegates MCP task
+  mcp-manager subagent (Haiku — fast & cheap)
+  ↓ reads .opencode/mcp-tools.json cache
+  ↓ routes to correct MCP tool category
+  ↓ executes tool, summarizes result
+  ↓ returns to main agent
+Main agent continues with minimal token cost
+```
+
+### Tool Categories
+
+| Category | Tools | Example |
+|----------|-------|---------|
+| browser | chrome-devtools__* | Screenshots, clicks, navigation |
+| github | github-*__* | PRs, issues, repos |
+| graphql | graphql-tools__* | Schema inspection, queries |
+| docs | context7__* | Documentation lookup |
+| reasoning | Sequential-Thinking__* | Complex analysis |
 
 ## Advanced Features (v4.0.0)
 
@@ -169,7 +192,7 @@ node bin/cli.js --remove # Remove
 ### Project Structure
 
 ```
-agent-skill-manager/
+skill-manager/
 ├── src/                    # TypeScript source
 │   ├── index.ts           # CLI entry point
 │   ├── install.ts         # Installation logic
@@ -177,12 +200,18 @@ agent-skill-manager/
 │   ├── remove.ts          # Clean removal
 │   └── utils.ts           # Shared utilities
 ├── templates/              # Files to install
-│   ├── agent.json         # Agent configuration
-│   ├── command-refresh.md         # /agent-skill-refresh command
-│   └── skill/             # Skill management system
+│   ├── agent.json         # mcp-manager agent config
+│   ├── command-refresh.md # /agent-skill-refresh command
+│   └── skill/             # mcp-management skill
 ├── bin/cli.js             # Executable entry
 └── dist/                  # Compiled output
 ```
+
+## Related Projects
+
+- [nano-brain](https://github.com/nano-step/nano-brain) — Persistent memory for AI agents
+- [graphql-inspector-mcp](https://github.com/nano-step/graphql-inspector-mcp) — GraphQL schema inspection MCP server
+- [mcp-database-inspector](https://github.com/nano-step/mcp-database-inspector) — Database inspection MCP server
 
 ## License
 

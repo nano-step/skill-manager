@@ -12,7 +12,7 @@ async function update() {
     const paths = await (0, utils_1.detectOpenCodePaths)();
     await (0, utils_1.ensureDirExists)(paths.commandDir);
     await (0, utils_1.ensureDirExists)(paths.skillsDir);
-    const skillTargetDir = path_1.default.join(paths.skillsDir, "agent-skill-management");
+    const skillTargetDir = path_1.default.join(paths.skillsDir, utils_1.SKILL_DIR_NAME);
     const commandTargetPath = path_1.default.join(paths.commandDir, "agent-skill-refresh.md");
     await (0, utils_1.ensureDirExists)(skillTargetDir);
     const state = await (0, utils_1.getInstallationState)(paths);
@@ -44,8 +44,10 @@ async function update() {
     await fs_extra_1.default.writeFile(commandTargetPath, commandTemplate, "utf8");
     const agentTemplate = await (0, utils_1.readJsonFile)(paths.templateAgentPath, {});
     const agentConfig = await (0, utils_1.readJsonFile)(paths.agentConfigPath, {});
-    const merged = { ...agentConfig, ...agentTemplate };
-    await (0, utils_1.writeJsonFile)(paths.agentConfigPath, merged);
+    const agents = (agentConfig.agents || {});
+    const templateAgents = (agentTemplate.agents || agentTemplate);
+    agentConfig.agents = { ...agents, ...templateAgents };
+    await (0, utils_1.writeJsonFile)(paths.agentConfigPath, agentConfig);
     await (0, utils_1.writeJsonFile)(paths.versionFilePath, { version: utils_1.PACKAGE_VERSION, updatedAt: new Date().toISOString() });
     console.log(chalk_1.default.green("Agent skill manager updated successfully."));
 }

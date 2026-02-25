@@ -1,0 +1,112 @@
+{
+  "templates": {
+    "database": {
+      "name": "database-safe-query",
+      "description": "Inspect database structure before executing queries",
+      "triggers": {
+        "category": "database",
+        "tools": ["execute_query", "select_query"],
+        "keywords": ["query", "select", "insert", "update", "delete", "sql"]
+      },
+      "prerequisites": [
+        {
+          "step": 1,
+          "tool": "list_databases",
+          "description": "List available databases to know what's accessible",
+          "required": true
+        },
+        {
+          "step": 2,
+          "tool": "list_tables",
+          "description": "List tables in the target database",
+          "required": true
+        },
+        {
+          "step": 3,
+          "tool": "inspect_table",
+          "description": "Check column names, types, and constraints",
+          "required": true
+        },
+        {
+          "step": 4,
+          "tool": "get_indexes",
+          "description": "Check indexes for query optimization",
+          "required": false
+        }
+      ],
+      "mode": "enforce"
+    },
+    "browser": {
+      "name": "browser-safe-interaction",
+      "description": "Take snapshot before interacting with page elements",
+      "triggers": {
+        "category": "browser",
+        "tools": ["click", "fill", "fill_form", "submit"],
+        "keywords": ["click", "fill", "submit", "form", "button"]
+      },
+      "prerequisites": [
+        {
+          "step": 1,
+          "tool": "take_snapshot",
+          "description": "Capture current page state and element UIDs",
+          "required": true
+        }
+      ],
+      "mode": "enforce"
+    },
+    "github-pr": {
+      "name": "github-pr-review",
+      "description": "Gather PR context before reviewing or merging",
+      "triggers": {
+        "category": "github",
+        "tools": ["merge_pull_request", "create_pull_request_review"],
+        "keywords": ["merge", "review pr", "approve pr"]
+      },
+      "prerequisites": [
+        {
+          "step": 1,
+          "tool": "get_pull_request",
+          "description": "Get PR details and description",
+          "required": true
+        },
+        {
+          "step": 2,
+          "tool": "get_pull_request_files",
+          "description": "List changed files",
+          "required": true
+        },
+        {
+          "step": 3,
+          "tool": "get_pull_request_status",
+          "description": "Check CI/CD status and reviews",
+          "required": true
+        }
+      ],
+      "mode": "warn"
+    },
+    "graphql": {
+      "name": "graphql-schema-aware",
+      "description": "Understand schema before executing queries",
+      "triggers": {
+        "category": "graphql",
+        "tools": ["execute_query", "execute_mutation"],
+        "keywords": ["graphql query", "graphql mutation"]
+      },
+      "prerequisites": [
+        {
+          "step": 1,
+          "tool": "get_schema",
+          "description": "Fetch GraphQL schema",
+          "required": true
+        },
+        {
+          "step": 2,
+          "tool": "filter_types",
+          "description": "Identify relevant types",
+          "required": false
+        }
+      ],
+      "mode": "suggest"
+    }
+  }
+}

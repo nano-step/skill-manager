@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import {
   AGENT_ID,
   PACKAGE_VERSION,
+  SKILL_DIR_NAME,
   detectOpenCodePaths,
   ensureDirExists,
   readJsonFile,
@@ -18,7 +19,7 @@ export async function install(): Promise<void> {
   await ensureDirExists(paths.commandDir);
   await ensureDirExists(paths.skillsDir);
 
-  const skillTargetDir = path.join(paths.skillsDir, "agent-skill-management");
+  const skillTargetDir = path.join(paths.skillsDir, SKILL_DIR_NAME);
   const commandTargetPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   await fs.copy(paths.templateSkillDir, skillTargetDir, { overwrite: true });
@@ -28,9 +29,11 @@ export async function install(): Promise<void> {
 
   const agentTemplate = await readJsonFile<Record<string, unknown>>(paths.templateAgentPath, {});
   const agentConfig = await readJsonFile<Record<string, unknown>>(paths.agentConfigPath, {});
-  const merged = { ...agentConfig, ...agentTemplate };
+  const agents = (agentConfig.agents || {}) as Record<string, unknown>;
+  const templateAgents = (agentTemplate.agents || agentTemplate) as Record<string, unknown>;
+  agentConfig.agents = { ...agents, ...templateAgents };
 
-  await writeJsonFile(paths.agentConfigPath, merged);
+  await writeJsonFile(paths.agentConfigPath, agentConfig);
 
   await writeJsonFile(paths.versionFilePath, { version: PACKAGE_VERSION, installedAt: new Date().toISOString() });
 

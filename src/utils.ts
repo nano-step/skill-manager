@@ -2,8 +2,9 @@ import path from "path";
 import os from "os";
 import fs from "fs-extra";
 
-export const PACKAGE_VERSION = "1.0.0";
-export const AGENT_ID = "agent-skill-manager";
+export const PACKAGE_VERSION = "4.0.0";
+export const AGENT_ID = "mcp-manager";
+export const SKILL_DIR_NAME = "mcp-management";
 
 export interface OpenCodePaths {
   configDir: string;
@@ -163,7 +164,7 @@ export async function directoryDiffersFromTemplate(dirPath: string, templateDir:
 }
 
 export async function getInstallationState(paths: OpenCodePaths): Promise<InstallationState> {
-  const skillPath = path.join(paths.skillsDir, "agent-skill-management", "SKILL.md");
+  const skillPath = path.join(paths.skillsDir, SKILL_DIR_NAME, "SKILL.md");
   const commandPath = path.join(paths.commandDir, "agent-skill-refresh.md");
 
   const [versionData, skillInstalled, commandInstalled] = await Promise.all([
@@ -173,7 +174,8 @@ export async function getInstallationState(paths: OpenCodePaths): Promise<Instal
   ]);
 
   const agentConfig = await readJsonFile<Record<string, unknown>>(paths.agentConfigPath, {});
-  const agentInstalled = Object.prototype.hasOwnProperty.call(agentConfig, AGENT_ID);
+  const agents = (agentConfig as any).agents as Record<string, unknown> | undefined;
+  const agentInstalled = agents ? Object.prototype.hasOwnProperty.call(agents, AGENT_ID) : false;
 
   return {
     installedVersion: typeof versionData.version === "string" ? versionData.version : null,

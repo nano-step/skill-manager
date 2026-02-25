@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AGENT_ID = exports.PACKAGE_VERSION = void 0;
+exports.SKILL_DIR_NAME = exports.AGENT_ID = exports.PACKAGE_VERSION = void 0;
 exports.detectOpenCodePaths = detectOpenCodePaths;
 exports.ensureDirExists = ensureDirExists;
 exports.readJsonFile = readJsonFile;
@@ -17,8 +17,9 @@ exports.getInstallationState = getInstallationState;
 const path_1 = __importDefault(require("path"));
 const os_1 = __importDefault(require("os"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
-exports.PACKAGE_VERSION = "1.0.0";
-exports.AGENT_ID = "agent-skill-manager";
+exports.PACKAGE_VERSION = "4.0.0";
+exports.AGENT_ID = "mcp-manager";
+exports.SKILL_DIR_NAME = "mcp-management";
 async function detectOpenCodePaths() {
     const homeConfig = path_1.default.join(os_1.default.homedir(), ".config", "opencode");
     const cwd = process.cwd();
@@ -134,7 +135,7 @@ async function directoryDiffersFromTemplate(dirPath, templateDir) {
     return false;
 }
 async function getInstallationState(paths) {
-    const skillPath = path_1.default.join(paths.skillsDir, "agent-skill-management", "SKILL.md");
+    const skillPath = path_1.default.join(paths.skillsDir, exports.SKILL_DIR_NAME, "SKILL.md");
     const commandPath = path_1.default.join(paths.commandDir, "agent-skill-refresh.md");
     const [versionData, skillInstalled, commandInstalled] = await Promise.all([
         readJsonFile(paths.versionFilePath, {}),
@@ -142,7 +143,8 @@ async function getInstallationState(paths) {
         fs_extra_1.default.pathExists(commandPath),
     ]);
     const agentConfig = await readJsonFile(paths.agentConfigPath, {});
-    const agentInstalled = Object.prototype.hasOwnProperty.call(agentConfig, exports.AGENT_ID);
+    const agents = agentConfig.agents;
+    const agentInstalled = agents ? Object.prototype.hasOwnProperty.call(agents, exports.AGENT_ID) : false;
     return {
         installedVersion: typeof versionData.version === "string" ? versionData.version : null,
         skillInstalled,
