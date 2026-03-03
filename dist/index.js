@@ -30,6 +30,12 @@ async function run() {
         .description("Install and manage AI agent skills for OpenCode")
         .version(utils_1.MANAGER_VERSION);
     program
+        .command("version")
+        .description("Show skill-manager version")
+        .action(() => {
+        console.log(utils_1.MANAGER_VERSION);
+    });
+    program
         .command("login")
         .description("Authenticate with GitHub to access private skills")
         .option("--token <token>", "GitHub personal access token")

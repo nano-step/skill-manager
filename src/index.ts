@@ -27,6 +27,13 @@ export async function run(): Promise<void> {
     .version(MANAGER_VERSION);
 
   program
+    .command("version")
+    .description("Show skill-manager version")
+    .action(() => {
+      console.log(MANAGER_VERSION);
+    });
+
+  program
     .command("login")
     .description("Authenticate with GitHub to access private skills")
     .option("--token <token>", "GitHub personal access token")
