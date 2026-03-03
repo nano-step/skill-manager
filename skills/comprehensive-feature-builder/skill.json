@@ -1,0 +1,9 @@
+{
+  "name": "comprehensive-feature-builder",
+  "version": "1.0.0",
+  "description": "Systematic 5-phase workflow for researching, designing, implementing, and testing features with checkpoint-based progress tracking",
+  "compatibility": "OpenCode",
+  "agent": null,
+  "commands": [],
+  "tags": ["feature", "workflow", "testing", "implementation", "design"]
+}
