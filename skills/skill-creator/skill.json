@@ -1,0 +1,14 @@
+{
+    "name": "skill-creator",
+    "version": "1.0.0",
+    "description": "Create and validate AI agent skills with progressive disclosure, bundled scripts, and marketplace packaging",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "skill",
+        "creator",
+        "validation",
+        "packaging"
+    ]
+}
