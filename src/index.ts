@@ -69,7 +69,13 @@ export async function run(): Promise<void> {
       await migrateV4State(paths.configDir, paths.stateFilePath, paths.skillsDir);
 
       const token = await resolveToken();
-      const remoteSkills = token ? await listRemoteSkills() : loadPrivateCatalog(paths.packageSkillsDir);
+      const liveRemoteSkills = token ? await listRemoteSkills() : [];
+      const bundledPrivate = loadPrivateCatalog(paths.packageSkillsDir);
+      const liveNames = new Set(liveRemoteSkills.map((s) => s.name));
+      const remoteSkills = [
+        ...liveRemoteSkills,
+        ...bundledPrivate.filter((s) => !liveNames.has(s.name)),
+      ];
       const catalog = await loadMergedCatalog(paths.packageSkillsDir, remoteSkills);
       const state = await loadState(paths.stateFilePath);
 
@@ -103,7 +109,7 @@ export async function run(): Promise<void> {
         let status: string;
         if (installed) {
           status = chalk.green("installed");
-        } else if (entry.source === "private" && !token) {
+        } else if (entry.source === "private" && !liveNames.has(skill.name)) {
           status = chalk.yellow("login required");
         } else {
           status = chalk.gray("not installed");
@@ -120,7 +126,8 @@ export async function run(): Promise<void> {
       }
 
       console.log("");
-      if (!token) {
+      const hasUnauthPrivate = catalog.some((e) => e.source === "private" && !liveNames.has(e.manifest.name));
+      if (hasUnauthPrivate) {
         console.log(chalk.gray("Tip: Run 'skill-manager login --token <github-token>' to install private skills."));
         console.log("");
       }
