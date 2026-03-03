@@ -1,0 +1,15 @@
+{
+    "name": "rtk",
+    "version": "1.0.0",
+    "description": "Token optimizer for AI coding agents. Wraps common CLI commands with rtk to reduce LLM token consumption by 60-90%.",
+    "compatibility": "OpenCode with RTK binary installed",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "rtk",
+        "token-saving",
+        "optimization",
+        "cli",
+        "productivity"
+    ]
+}
