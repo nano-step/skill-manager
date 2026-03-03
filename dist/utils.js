@@ -13,7 +13,7 @@ exports.writeText = writeText;
 const path_1 = __importDefault(require("path"));
 const os_1 = __importDefault(require("os"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
-exports.MANAGER_VERSION = "5.4.1";
+exports.MANAGER_VERSION = "5.4.2";
 async function detectOpenCodePaths() {
     const homeConfig = path_1.default.join(os_1.default.homedir(), ".config", "opencode");
     const cwd = process.cwd();

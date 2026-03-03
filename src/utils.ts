@@ -2,7 +2,7 @@ import path from "path";
 import os from "os";
 import fs from "fs-extra";
 
-export const MANAGER_VERSION = "5.4.1";
+export const MANAGER_VERSION = "5.4.2";
 
 export interface SkillManifest {
   name: string;
