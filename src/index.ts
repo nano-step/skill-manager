@@ -1,9 +1,11 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { MANAGER_VERSION, detectOpenCodePaths } from "./utils";
-import { loadCatalog } from "./registry";
+import { loadCatalog, loadMergedCatalog } from "./registry";
 import { loadState, migrateV4State } from "./state";
 import { installSkill, removeSkill, updateSkill } from "./installer";
+import { listRemoteSkills } from "./remote-registry";
+import { loadAuthConfig, saveAuthConfig, removeAuthConfig, resolveToken } from "./auth";
 
 export async function run(): Promise<void> {
   const args = process.argv.slice(2);
@@ -25,16 +27,50 @@ export async function run(): Promise<void> {
     .version(MANAGER_VERSION);
 
   program
+    .command("login")
+    .description("Authenticate with GitHub to access private skills")
+    .option("--token <token>", "GitHub personal access token")
+    .action(async (options: { token?: string }) => {
+      if (!options.token) {
+        console.error(chalk.red("Please provide a token with --token <token>"));
+        console.error(chalk.gray("Create a token at: https://github.com/settings/tokens"));
+        console.error(chalk.gray("Required scope: repo (for private repositories)"));
+        process.exit(1);
+      }
+
+      const config = await loadAuthConfig();
+      config.token = options.token;
+      await saveAuthConfig(config);
+
+      console.log(chalk.green("✓ Token saved successfully"));
+      console.log(chalk.gray("  Config: ~/.config/skill-manager/config.json"));
+    });
+
+  program
+    .command("logout")
+    .description("Remove stored GitHub token")
+    .action(async () => {
+      await removeAuthConfig();
+      console.log(chalk.green("✓ Token removed"));
+    });
+
+  program
     .command("list")
     .description("Show available skills from the catalog")
     .action(async () => {
       const paths = await detectOpenCodePaths();
       await migrateV4State(paths.configDir, paths.stateFilePath, paths.skillsDir);
-      const catalog = await loadCatalog(paths.packageSkillsDir);
+
+      const token = await resolveToken();
+      const remoteSkills = token ? await listRemoteSkills() : [];
+      const catalog = await loadMergedCatalog(paths.packageSkillsDir, remoteSkills);
       const state = await loadState(paths.stateFilePath);
 
       if (catalog.length === 0) {
         console.log(chalk.yellow("No skills found in catalog."));
+        if (!token) {
+          console.log(chalk.gray("Run 'skill-manager login' to access private skills."));
+        }
         return;
       }
 
@@ -42,6 +78,7 @@ export async function run(): Promise<void> {
 
       const nameWidth = 22;
       const versionWidth = 10;
+      const sourceWidth = 10;
       const statusWidth = 14;
 
       console.log(
@@ -49,25 +86,33 @@ export async function run(): Promise<void> {
           "  " +
             "Name".padEnd(nameWidth) +
             "Version".padEnd(versionWidth) +
+            "Source".padEnd(sourceWidth) +
             "Status".padEnd(statusWidth) +
             "Description",
         ),
       );
-      console.log(chalk.gray("  " + "─".repeat(nameWidth + versionWidth + statusWidth + 30)));
+      console.log(chalk.gray("  " + "─".repeat(nameWidth + versionWidth + sourceWidth + statusWidth + 30)));
 
-      for (const skill of catalog) {
+      for (const entry of catalog) {
+        const skill = entry.manifest;
         const installed = state.skills[skill.name];
         const status = installed ? chalk.green("installed") : chalk.gray("not installed");
+        const sourceLabel = entry.source === "private" ? chalk.magenta("private") : chalk.blue("public");
         console.log(
           "  " +
             chalk.cyan(skill.name.padEnd(nameWidth)) +
             skill.version.padEnd(versionWidth) +
+            sourceLabel.padEnd(sourceWidth + 10) +
             status.padEnd(statusWidth + 10) +
             skill.description,
         );
       }
 
       console.log("");
+      if (!token) {
+        console.log(chalk.gray("Tip: Run 'skill-manager login' to access private skills."));
+        console.log("");
+      }
     });
 
   program
@@ -79,13 +124,16 @@ export async function run(): Promise<void> {
       await migrateV4State(paths.configDir, paths.stateFilePath, paths.skillsDir);
 
       if (options.all) {
-        const catalog = await loadCatalog(paths.packageSkillsDir);
+        const token = await resolveToken();
+        const remoteSkills = token ? await listRemoteSkills() : [];
+        const catalog = await loadMergedCatalog(paths.packageSkillsDir, remoteSkills);
+
         if (catalog.length === 0) {
           console.log(chalk.yellow("No skills found in catalog."));
           return;
         }
-        for (const skill of catalog) {
-          await installSkill(skill.name, paths);
+        for (const entry of catalog) {
+          await installSkill(entry.manifest.name, paths);
         }
       } else if (name) {
         await installSkill(name, paths);

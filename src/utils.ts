@@ -17,6 +17,11 @@ export interface SkillManifest {
   tags?: string[];
 }
 
+export interface CatalogEntry {
+  manifest: SkillManifest;
+  source: "public" | "private";
+}
+
 export interface InstalledSkillInfo {
   version: string;
   installedAt: string;

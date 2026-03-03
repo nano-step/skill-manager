@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import chalk from "chalk";
-import { SkillManifest } from "./utils";
+import { SkillManifest, CatalogEntry } from "./utils";
 
 function isValidManifest(data: unknown): data is SkillManifest {
   if (typeof data !== "object" || data === null) return false;
@@ -60,4 +60,22 @@ export async function getSkillManifest(packageSkillsDir: string, name: string): 
   } catch {
     return null;
   }
+}
+
+export async function loadMergedCatalog(packageSkillsDir: string, remoteSkills: SkillManifest[]): Promise<CatalogEntry[]> {
+  const localCatalog = await loadCatalog(packageSkillsDir);
+  const localNames = new Set(localCatalog.map((s) => s.name));
+
+  const entries: CatalogEntry[] = localCatalog.map((manifest) => ({
+    manifest,
+    source: "public" as const,
+  }));
+
+  for (const manifest of remoteSkills) {
+    if (!localNames.has(manifest.name)) {
+      entries.push({ manifest, source: "private" });
+    }
+  }
+
+  return entries.sort((a, b) => a.manifest.name.localeCompare(b.manifest.name));
 }

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadCatalog = loadCatalog;
 exports.getSkillManifest = getSkillManifest;
+exports.loadMergedCatalog = loadMergedCatalog;
 const path_1 = __importDefault(require("path"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
 const chalk_1 = __importDefault(require("chalk"));
@@ -60,4 +61,18 @@ async function getSkillManifest(packageSkillsDir, name) {
     catch {
         return null;
     }
+}
+async function loadMergedCatalog(packageSkillsDir, remoteSkills) {
+    const localCatalog = await loadCatalog(packageSkillsDir);
+    const localNames = new Set(localCatalog.map((s) => s.name));
+    const entries = localCatalog.map((manifest) => ({
+        manifest,
+        source: "public",
+    }));
+    for (const manifest of remoteSkills) {
+        if (!localNames.has(manifest.name)) {
+            entries.push({ manifest, source: "private" });
+        }
+    }
+    return entries.sort((a, b) => a.manifest.name.localeCompare(b.manifest.name));
 }

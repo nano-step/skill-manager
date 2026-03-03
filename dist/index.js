@@ -10,6 +10,8 @@ const utils_1 = require("./utils");
 const registry_1 = require("./registry");
 const state_1 = require("./state");
 const installer_1 = require("./installer");
+const remote_registry_1 = require("./remote-registry");
+const auth_1 = require("./auth");
 async function run() {
     const args = process.argv.slice(2);
     if (args.includes("--update") || args.includes("--remove")) {
@@ -28,37 +30,75 @@ async function run() {
         .description("Install and manage AI agent skills for OpenCode")
         .version(utils_1.MANAGER_VERSION);
     program
+        .command("login")
+        .description("Authenticate with GitHub to access private skills")
+        .option("--token <token>", "GitHub personal access token")
+        .action(async (options) => {
+        if (!options.token) {
+            console.error(chalk_1.default.red("Please provide a token with --token <token>"));
+            console.error(chalk_1.default.gray("Create a token at: https://github.com/settings/tokens"));
+            console.error(chalk_1.default.gray("Required scope: repo (for private repositories)"));
+            process.exit(1);
+        }
+        const config = await (0, auth_1.loadAuthConfig)();
+        config.token = options.token;
+        await (0, auth_1.saveAuthConfig)(config);
+        console.log(chalk_1.default.green("✓ Token saved successfully"));
+        console.log(chalk_1.default.gray("  Config: ~/.config/skill-manager/config.json"));
+    });
+    program
+        .command("logout")
+        .description("Remove stored GitHub token")
+        .action(async () => {
+        await (0, auth_1.removeAuthConfig)();
+        console.log(chalk_1.default.green("✓ Token removed"));
+    });
+    program
         .command("list")
         .description("Show available skills from the catalog")
         .action(async () => {
         const paths = await (0, utils_1.detectOpenCodePaths)();
         await (0, state_1.migrateV4State)(paths.configDir, paths.stateFilePath, paths.skillsDir);
-        const catalog = await (0, registry_1.loadCatalog)(paths.packageSkillsDir);
+        const token = await (0, auth_1.resolveToken)();
+        const remoteSkills = token ? await (0, remote_registry_1.listRemoteSkills)() : [];
+        const catalog = await (0, registry_1.loadMergedCatalog)(paths.packageSkillsDir, remoteSkills);
         const state = await (0, state_1.loadState)(paths.stateFilePath);
         if (catalog.length === 0) {
             console.log(chalk_1.default.yellow("No skills found in catalog."));
+            if (!token) {
+                console.log(chalk_1.default.gray("Run 'skill-manager login' to access private skills."));
+            }
             return;
         }
         console.log(chalk_1.default.bold("\nAvailable Skills:\n"));
         const nameWidth = 22;
         const versionWidth = 10;
+        const sourceWidth = 10;
         const statusWidth = 14;
         console.log(chalk_1.default.gray("  " +
             "Name".padEnd(nameWidth) +
             "Version".padEnd(versionWidth) +
+            "Source".padEnd(sourceWidth) +
             "Status".padEnd(statusWidth) +
             "Description"));
-        console.log(chalk_1.default.gray("  " + "─".repeat(nameWidth + versionWidth + statusWidth + 30)));
-        for (const skill of catalog) {
+        console.log(chalk_1.default.gray("  " + "─".repeat(nameWidth + versionWidth + sourceWidth + statusWidth + 30)));
+        for (const entry of catalog) {
+            const skill = entry.manifest;
             const installed = state.skills[skill.name];
             const status = installed ? chalk_1.default.green("installed") : chalk_1.default.gray("not installed");
+            const sourceLabel = entry.source === "private" ? chalk_1.default.magenta("private") : chalk_1.default.blue("public");
             console.log("  " +
                 chalk_1.default.cyan(skill.name.padEnd(nameWidth)) +
                 skill.version.padEnd(versionWidth) +
+                sourceLabel.padEnd(sourceWidth + 10) +
                 status.padEnd(statusWidth + 10) +
                 skill.description);
         }
         console.log("");
+        if (!token) {
+            console.log(chalk_1.default.gray("Tip: Run 'skill-manager login' to access private skills."));
+            console.log("");
+        }
     });
     program
         .command("install [name]")
@@ -68,13 +108,15 @@ async function run() {
         const paths = await (0, utils_1.detectOpenCodePaths)();
         await (0, state_1.migrateV4State)(paths.configDir, paths.stateFilePath, paths.skillsDir);
         if (options.all) {
-            const catalog = await (0, registry_1.loadCatalog)(paths.packageSkillsDir);
+            const token = await (0, auth_1.resolveToken)();
+            const remoteSkills = token ? await (0, remote_registry_1.listRemoteSkills)() : [];
+            const catalog = await (0, registry_1.loadMergedCatalog)(paths.packageSkillsDir, remoteSkills);
             if (catalog.length === 0) {
                 console.log(chalk_1.default.yellow("No skills found in catalog."));
                 return;
             }
-            for (const skill of catalog) {
-                await (0, installer_1.installSkill)(skill.name, paths);
+            for (const entry of catalog) {
+                await (0, installer_1.installSkill)(entry.manifest.name, paths);
             }
         }
         else if (name) {
