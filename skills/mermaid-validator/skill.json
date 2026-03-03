@@ -1,0 +1,15 @@
+{
+    "name": "mermaid-validator",
+    "version": "2.0.0",
+    "description": "Validate and write correct Mermaid diagrams. Run the validator script before finalizing any .md file containing a mermaid block. Enforces syntax rules that prevent parse errors.",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "mermaid",
+        "validation",
+        "diagrams",
+        "documentation",
+        "syntax"
+    ]
+}
