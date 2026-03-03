@@ -1,0 +1,14 @@
+{
+    "name": "idea-workflow",
+    "version": "1.0.0",
+    "description": "Analyze source code and produce monetization strategy with execution blueprint and go-to-market plan",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "monetization",
+        "strategy",
+        "business",
+        "analysis"
+    ]
+}
