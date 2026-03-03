@@ -1,0 +1,16 @@
+{
+    "name": "ui-ux-pro-max",
+    "version": "1.0.0",
+    "description": "UI/UX design intelligence with searchable database of 67 styles, 96 palettes, 57 font pairings, and 99 UX guidelines",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "ui",
+        "ux",
+        "design",
+        "frontend",
+        "css",
+        "tailwind"
+    ]
+}
