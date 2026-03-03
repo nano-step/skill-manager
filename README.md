@@ -26,7 +26,7 @@ npx @nano-step/skill-manager install --all
 | `update [name]` | Update one or all installed skills |
 | `installed` | Show currently installed skills |
 
-## Available Skills (15 public + 5 private)
+## Available Skills (15 public + 6 private)
 
 ### Public Skills (bundled in npm)
 
@@ -57,6 +57,7 @@ npx @nano-step/skill-manager install --all
 | `mcp-management` | MCP tool routing and execution with token-saving isolation |
 | `pr-code-reviewer` | Comprehensive PR code review with 4 parallel subagents |
 | `rri-t-testing` | RRI-T QA methodology — 5-phase testing with 7 dimensions and release gates |
+| `database-inspector` | Database schema inspection for MySQL and PostgreSQL with progressive discovery |
 ## What Gets Installed
 
 When you install a skill, the manager:
