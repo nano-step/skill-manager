@@ -1,0 +1,15 @@
+{
+    "name": "security-workflow",
+    "version": "1.0.0",
+    "description": "Advanced security audit \u2014 OWASP Top 10, CVE scanning, supply chain risks, and prioritized hardening plan",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "security",
+        "audit",
+        "owasp",
+        "cve",
+        "vulnerability"
+    ]
+}
