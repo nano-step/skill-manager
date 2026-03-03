@@ -26,6 +26,7 @@ async function installFromDir(manifest, sourceDir, paths, source) {
     await fs_extra_1.default.copy(sourceDir, targetSkillDir, { overwrite: true });
     await (0, config_1.copyCommands)(manifest, sourceDir, paths.commandDir);
     await (0, config_1.mergeAgentConfig)(paths.agentConfigPath, manifest);
+    await (0, config_1.mergeMcpConfig)(paths.opencodeJsonPath, manifest);
     state.skills[manifest.name] = {
         version: manifest.version,
         installedAt: new Date().toISOString(),
@@ -88,6 +89,7 @@ async function removeSkill(name, paths) {
     if (effectiveManifest) {
         await (0, config_1.removeCommands)(effectiveManifest, paths.commandDir);
         await (0, config_1.removeAgentConfig)(paths.agentConfigPath, effectiveManifest);
+        await (0, config_1.removeMcpConfig)(paths.opencodeJsonPath, effectiveManifest);
     }
     delete state.skills[name];
     await (0, state_1.saveState)(paths.stateFilePath, state);
@@ -111,6 +113,7 @@ async function updateSkill(name, paths) {
         await fs_extra_1.default.copy(packageSkillDir, targetSkillDir, { overwrite: true });
         await (0, config_1.copyCommands)(localManifest, packageSkillDir, paths.commandDir);
         await (0, config_1.mergeAgentConfig)(paths.agentConfigPath, localManifest);
+        await (0, config_1.mergeMcpConfig)(paths.opencodeJsonPath, localManifest);
         state.skills[name] = {
             version: localManifest.version,
             installedAt: new Date().toISOString(),
@@ -133,6 +136,7 @@ async function updateSkill(name, paths) {
                 await fs_extra_1.default.copy(tempDir, targetSkillDir, { overwrite: true });
                 await (0, config_1.copyCommands)(remoteManifest, tempDir, paths.commandDir);
                 await (0, config_1.mergeAgentConfig)(paths.agentConfigPath, remoteManifest);
+                await (0, config_1.mergeMcpConfig)(paths.opencodeJsonPath, remoteManifest);
                 state.skills[name] = {
                     version: remoteManifest.version,
                     installedAt: new Date().toISOString(),

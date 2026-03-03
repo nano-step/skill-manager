@@ -2,7 +2,7 @@ import path from "path";
 import os from "os";
 import fs from "fs-extra";
 
-export const MANAGER_VERSION = "5.4.2";
+export const MANAGER_VERSION = "5.5.0";
 
 export interface SkillManifest {
   name: string;
@@ -13,6 +13,7 @@ export interface SkillManifest {
     id: string;
     config: Record<string, unknown>;
   } | null;
+  mcp?: Record<string, Record<string, unknown>> | null;
   commands?: string[];
   tags?: string[];
 }
@@ -41,6 +42,7 @@ export interface OpenCodePaths {
   agentConfigPath: string;
   stateFilePath: string;
   packageSkillsDir: string;
+  opencodeJsonPath: string;
 }
 
 export async function detectOpenCodePaths(): Promise<OpenCodePaths> {
@@ -56,6 +58,9 @@ export async function detectOpenCodePaths(): Promise<OpenCodePaths> {
   }
 
   const configDir = hasProjectConfig ? projectConfig : homeConfig;
+  const opencodeJsonPath = hasProjectConfig
+    ? path.join(cwd, "opencode.json")
+    : path.join(configDir, "opencode.json");
 
   return {
     configDir,
@@ -64,6 +69,7 @@ export async function detectOpenCodePaths(): Promise<OpenCodePaths> {
     agentConfigPath: path.join(configDir, "oh-my-opencode.json"),
     stateFilePath: path.join(configDir, ".skill-manager.json"),
     packageSkillsDir: path.join(__dirname, "..", "skills"),
+    opencodeJsonPath,
   };
 }
 

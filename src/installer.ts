@@ -4,7 +4,14 @@ import chalk from "chalk";
 import { OpenCodePaths, SkillManifest, ensureDirExists } from "./utils";
 import { getSkillManifest, loadCatalog } from "./registry";
 import { loadState, saveState } from "./state";
-import { mergeAgentConfig, removeAgentConfig, copyCommands, removeCommands } from "./config";
+import {
+  mergeAgentConfig,
+  removeAgentConfig,
+  mergeMcpConfig,
+  removeMcpConfig,
+  copyCommands,
+  removeCommands,
+} from "./config";
 import { downloadSkillToTemp, getRemoteSkillManifest } from "./remote-registry";
 
 async function installFromDir(
@@ -27,6 +34,7 @@ async function installFromDir(
 
   await copyCommands(manifest, sourceDir, paths.commandDir);
   await mergeAgentConfig(paths.agentConfigPath, manifest);
+  await mergeMcpConfig(paths.opencodeJsonPath, manifest);
 
   state.skills[manifest.name] = {
     version: manifest.version,
@@ -97,6 +105,7 @@ export async function removeSkill(name: string, paths: OpenCodePaths): Promise<v
   if (effectiveManifest) {
     await removeCommands(effectiveManifest, paths.commandDir);
     await removeAgentConfig(paths.agentConfigPath, effectiveManifest);
+    await removeMcpConfig(paths.opencodeJsonPath, effectiveManifest);
   }
 
   delete state.skills[name];
@@ -127,6 +136,7 @@ export async function updateSkill(name: string, paths: OpenCodePaths): Promise<v
 
     await copyCommands(localManifest, packageSkillDir, paths.commandDir);
     await mergeAgentConfig(paths.agentConfigPath, localManifest);
+    await mergeMcpConfig(paths.opencodeJsonPath, localManifest);
 
     state.skills[name] = {
       version: localManifest.version,
@@ -154,6 +164,7 @@ export async function updateSkill(name: string, paths: OpenCodePaths): Promise<v
 
         await copyCommands(remoteManifest, tempDir, paths.commandDir);
         await mergeAgentConfig(paths.agentConfigPath, remoteManifest);
+        await mergeMcpConfig(paths.opencodeJsonPath, remoteManifest);
 
         state.skills[name] = {
           version: remoteManifest.version,

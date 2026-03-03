@@ -13,7 +13,7 @@ exports.writeText = writeText;
 const path_1 = __importDefault(require("path"));
 const os_1 = __importDefault(require("os"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
-exports.MANAGER_VERSION = "5.4.2";
+exports.MANAGER_VERSION = "5.5.0";
 async function detectOpenCodePaths() {
     const homeConfig = path_1.default.join(os_1.default.homedir(), ".config", "opencode");
     const cwd = process.cwd();
@@ -24,6 +24,9 @@ async function detectOpenCodePaths() {
         throw new Error("OpenCode config not found. Expected ~/.config/opencode or .opencode in project.");
     }
     const configDir = hasProjectConfig ? projectConfig : homeConfig;
+    const opencodeJsonPath = hasProjectConfig
+        ? path_1.default.join(cwd, "opencode.json")
+        : path_1.default.join(configDir, "opencode.json");
     return {
         configDir,
         commandDir: path_1.default.join(configDir, "command"),
@@ -31,6 +34,7 @@ async function detectOpenCodePaths() {
         agentConfigPath: path_1.default.join(configDir, "oh-my-opencode.json"),
         stateFilePath: path_1.default.join(configDir, ".skill-manager.json"),
         packageSkillsDir: path_1.default.join(__dirname, "..", "skills"),
+        opencodeJsonPath,
     };
 }
 async function ensureDirExists(dirPath) {

@@ -1,4 +1,4 @@
-export declare const MANAGER_VERSION = "5.4.2";
+export declare const MANAGER_VERSION = "5.5.0";
 export interface SkillManifest {
     name: string;
     version: string;
@@ -8,6 +8,7 @@ export interface SkillManifest {
         id: string;
         config: Record<string, unknown>;
     } | null;
+    mcp?: Record<string, Record<string, unknown>> | null;
     commands?: string[];
     tags?: string[];
 }
@@ -32,6 +33,7 @@ export interface OpenCodePaths {
     agentConfigPath: string;
     stateFilePath: string;
     packageSkillsDir: string;
+    opencodeJsonPath: string;
 }
 export declare function detectOpenCodePaths(): Promise<OpenCodePaths>;
 export declare function ensureDirExists(dirPath: string): Promise<void>;
