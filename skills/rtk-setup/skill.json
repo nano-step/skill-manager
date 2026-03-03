@@ -1,0 +1,14 @@
+{
+    "name": "rtk-setup",
+    "version": "1.0.0",
+    "description": "One-time setup + ongoing enforcement of RTK (Rust Token Killer) across sessions and subagents \u2014 reduces token consumption by 60-90%",
+    "compatibility": "OpenCode with RTK binary installed",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "rtk",
+        "token-saving",
+        "optimization",
+        "setup"
+    ]
+}
