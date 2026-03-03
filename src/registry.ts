@@ -62,6 +62,18 @@ export async function getSkillManifest(packageSkillsDir: string, name: string): 
   }
 }
 
+export function loadPrivateCatalog(packageSkillsDir: string): SkillManifest[] {
+  const catalogPath = path.join(packageSkillsDir, "..", "private-catalog.json");
+  try {
+    const raw = fs.readFileSync(catalogPath, "utf8");
+    const data: unknown = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return data.filter(isValidManifest);
+  } catch {
+    return [];
+  }
+}
+
 export async function loadMergedCatalog(packageSkillsDir: string, remoteSkills: SkillManifest[]): Promise<CatalogEntry[]> {
   const localCatalog = await loadCatalog(packageSkillsDir);
   const localNames = new Set(localCatalog.map((s) => s.name));

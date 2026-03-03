@@ -1,4 +1,4 @@
-export declare const MANAGER_VERSION = "5.5.0";
+export declare const MANAGER_VERSION = "5.5.1";
 export interface SkillManifest {
     name: string;
     version: string;

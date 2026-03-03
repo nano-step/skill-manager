@@ -66,14 +66,11 @@ async function run() {
         const paths = await (0, utils_1.detectOpenCodePaths)();
         await (0, state_1.migrateV4State)(paths.configDir, paths.stateFilePath, paths.skillsDir);
         const token = await (0, auth_1.resolveToken)();
-        const remoteSkills = token ? await (0, remote_registry_1.listRemoteSkills)() : [];
+        const remoteSkills = token ? await (0, remote_registry_1.listRemoteSkills)() : (0, registry_1.loadPrivateCatalog)(paths.packageSkillsDir);
         const catalog = await (0, registry_1.loadMergedCatalog)(paths.packageSkillsDir, remoteSkills);
         const state = await (0, state_1.loadState)(paths.stateFilePath);
         if (catalog.length === 0) {
             console.log(chalk_1.default.yellow("No skills found in catalog."));
-            if (!token) {
-                console.log(chalk_1.default.gray("Run 'skill-manager login' to access private skills."));
-            }
             return;
         }
         console.log(chalk_1.default.bold("\nAvailable Skills:\n"));
@@ -91,7 +88,16 @@ async function run() {
         for (const entry of catalog) {
             const skill = entry.manifest;
             const installed = state.skills[skill.name];
-            const status = installed ? chalk_1.default.green("installed") : chalk_1.default.gray("not installed");
+            let status;
+            if (installed) {
+                status = chalk_1.default.green("installed");
+            }
+            else if (entry.source === "private" && !token) {
+                status = chalk_1.default.yellow("login required");
+            }
+            else {
+                status = chalk_1.default.gray("not installed");
+            }
             const sourceLabel = entry.source === "private" ? chalk_1.default.magenta("private") : chalk_1.default.blue("public");
             console.log("  " +
                 chalk_1.default.cyan(skill.name.padEnd(nameWidth)) +
@@ -102,7 +108,7 @@ async function run() {
         }
         console.log("");
         if (!token) {
-            console.log(chalk_1.default.gray("Tip: Run 'skill-manager login' to access private skills."));
+            console.log(chalk_1.default.gray("Tip: Run 'skill-manager login --token <github-token>' to install private skills."));
             console.log("");
         }
     });

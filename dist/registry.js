@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadCatalog = loadCatalog;
 exports.getSkillManifest = getSkillManifest;
+exports.loadPrivateCatalog = loadPrivateCatalog;
 exports.loadMergedCatalog = loadMergedCatalog;
 const path_1 = __importDefault(require("path"));
 const fs_extra_1 = __importDefault(require("fs-extra"));
@@ -60,6 +61,19 @@ async function getSkillManifest(packageSkillsDir, name) {
     }
     catch {
         return null;
+    }
+}
+function loadPrivateCatalog(packageSkillsDir) {
+    const catalogPath = path_1.default.join(packageSkillsDir, "..", "private-catalog.json");
+    try {
+        const raw = fs_extra_1.default.readFileSync(catalogPath, "utf8");
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data))
+            return [];
+        return data.filter(isValidManifest);
+    }
+    catch {
+        return [];
     }
 }
 async function loadMergedCatalog(packageSkillsDir, remoteSkills) {

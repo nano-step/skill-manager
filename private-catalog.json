@@ -1,0 +1,32 @@
+[
+  {
+    "name": "database-inspector",
+    "version": "1.0.0",
+    "description": "Database schema inspection for MySQL and PostgreSQL — progressive discovery workflow with read-only SQL execution"
+  },
+  {
+    "name": "e2e-test-generator",
+    "version": "1.0.0",
+    "description": "AI-driven E2E test generation from PRD requirements using Playwright MCP"
+  },
+  {
+    "name": "feature-analysis",
+    "version": "2.0.0",
+    "description": "Deep code analysis of any feature or service before writing docs, diagrams, or making changes"
+  },
+  {
+    "name": "mcp-management",
+    "version": "2.0.0",
+    "description": "MCP tool routing and execution with token-saving isolation"
+  },
+  {
+    "name": "pr-code-reviewer",
+    "version": "2.6.0",
+    "description": "Comprehensive code review with 4 parallel subagents and GitHub Copilot-style PR summaries"
+  },
+  {
+    "name": "rri-t-testing",
+    "version": "1.0.0",
+    "description": "RRI-T QA methodology — 5-phase testing with 7 dimensions, 5 personas, and release gates"
+  }
+]

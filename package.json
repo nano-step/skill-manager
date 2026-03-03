@@ -1,6 +1,6 @@
 {
   "name": "@nano-step/skill-manager",
-  "version": "5.5.0",
+  "version": "5.5.1",
   "description": "CLI tool that installs and manages AI agent skills, MCP tool routing, and workflow configurations.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,8 @@
   "files": [
     "bin",
     "dist",
-    "skills"
+    "skills",
+    "private-catalog.json"
   ],
   "scripts": {
     "build": "tsc",
