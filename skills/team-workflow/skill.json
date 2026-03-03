@@ -1,0 +1,15 @@
+{
+    "name": "team-workflow",
+    "version": "1.0.0",
+    "description": "Simulate an autonomous software team analyzing a feature \u2014 produces architecture, execution plan, QA strategy, and timeline",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "team",
+        "planning",
+        "architecture",
+        "qa",
+        "simulation"
+    ]
+}
