@@ -1,0 +1,17 @@
+{
+    "name": "pdf",
+    "version": "1.0.0",
+    "description": "PDF manipulation toolkit \u2014 extract text/tables, create, merge, split, rotate, OCR, fill forms, watermark, and password protect",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "pdf",
+        "extract",
+        "merge",
+        "ocr",
+        "forms",
+        "reportlab",
+        "pypdf"
+    ]
+}
