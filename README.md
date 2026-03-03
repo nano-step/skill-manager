@@ -26,20 +26,20 @@ npx @nano-step/skill-manager install --all
 | `update [name]` | Update one or all installed skills |
 | `installed` | Show currently installed skills |
 
-## Available Skills (17)
+## Available Skills (15 public + 5 private)
+
+### Public Skills (bundled in npm)
 
 | Skill | Description |
 |-------|-------------|
 | `blog-workflow` | Generate SEO-optimized blog posts for dev.to, Medium, LinkedIn, Hashnode |
 | `comprehensive-feature-builder` | Systematic 5-phase workflow for researching, designing, implementing, and testing features |
-| `feature-analysis` | Deep code analysis with execution tracing, data transformation audits, and gap analysis |
 | `graphql-inspector` | GraphQL schema inspection with progressive discovery workflow |
 | `idea-workflow` | Analyze source code and produce monetization strategy with execution blueprint |
 | `mermaid-validator` | Validate Mermaid diagram syntax — enforces rules that prevent parse errors |
 | `nano-brain` | Persistent memory for AI agents — hybrid search across sessions, codebase, and notes |
 | `pdf` | PDF manipulation toolkit — extract, create, merge, split, OCR, fill forms, watermark |
 | `reddit-workflow` | Draft Reddit posts optimized for subreddit rules, tone, and spam filters |
-| `rri-t-testing` | RRI-T QA methodology — 5-phase testing with 7 dimensions, 5 personas, and release gates |
 | `rtk` | Token optimizer — wraps CLI commands with rtk to reduce token consumption by 60-90% |
 | `rtk-setup` | One-time RTK setup + ongoing enforcement across sessions and subagents |
 | `security-workflow` | OWASP Top 10 security audit with CVE scanning and prioritized hardening plan |
@@ -47,6 +47,16 @@ npx @nano-step/skill-manager install --all
 | `skill-management` | AI skill routing — isolates tool definitions in subagent context to save 80-95% tokens |
 | `team-workflow` | Simulate an autonomous software team — architecture, execution plan, QA strategy |
 | `ui-ux-pro-max` | UI/UX design intelligence with searchable database of styles, palettes, fonts, and guidelines |
+
+### Private Skills (requires `login`)
+
+| Skill | Description |
+|-------|-------------|
+| `e2e-test-generator` | E2E test generation from PRD using Playwright MCP |
+| `feature-analysis` | Deep code analysis with execution tracing and gap analysis |
+| `mcp-management` | MCP tool routing and execution with token-saving isolation |
+| `pr-code-reviewer` | Comprehensive PR code review with 4 parallel subagents |
+| `rri-t-testing` | RRI-T QA methodology — 5-phase testing with 7 dimensions and release gates |
 ## What Gets Installed
 
 When you install a skill, the manager:
