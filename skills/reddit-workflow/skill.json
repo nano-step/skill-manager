@@ -1,0 +1,14 @@
+{
+    "name": "reddit-workflow",
+    "version": "1.0.0",
+    "description": "Draft Reddit posts optimized for subreddit rules, tone, and spam filters with compliance checking",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "reddit",
+        "content",
+        "social-media",
+        "writing"
+    ]
+}
