@@ -1,0 +1,15 @@
+{
+    "name": "nano-brain",
+    "version": "1.0.0",
+    "description": "Persistent memory for AI coding agents. Hybrid search (BM25 + semantic + LLM reranking) across past sessions, codebase, notes, and daily logs.",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "memory",
+        "persistence",
+        "search",
+        "context",
+        "sessions"
+    ]
+}
