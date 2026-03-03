@@ -15,11 +15,6 @@
     "description": "Deep code analysis of any feature or service before writing docs, diagrams, or making changes"
   },
   {
-    "name": "mcp-management",
-    "version": "2.0.0",
-    "description": "MCP tool routing and execution with token-saving isolation"
-  },
-  {
     "name": "pr-code-reviewer",
     "version": "2.6.0",
     "description": "Comprehensive code review with 4 parallel subagents and GitHub Copilot-style PR summaries"
