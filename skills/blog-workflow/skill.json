@@ -1,0 +1,16 @@
+{
+    "name": "blog-workflow",
+    "version": "1.0.0",
+    "description": "Generate SEO-optimized blog posts for dev.to, Medium, LinkedIn, Hashnode from project context",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "blog",
+        "content",
+        "seo",
+        "devto",
+        "medium",
+        "linkedin"
+    ]
+}
