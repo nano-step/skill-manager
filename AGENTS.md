@@ -9,9 +9,12 @@
 | `npm run build` | Compile TypeScript to `dist/` |
 | `node bin/cli.js list` | Show available skills |
 | `node bin/cli.js install <name>` | Install a skill |
+| `node bin/cli.js install <name> --force` | Force reinstall even if same version |
 | `node bin/cli.js install --all` | Install all skills |
+| `node bin/cli.js install --all --force` | Force reinstall all skills |
 | `node bin/cli.js remove <name>` | Remove a skill |
 | `node bin/cli.js update [name]` | Update skill(s) |
+| `node bin/cli.js update [name] --force` | Force update even if same version |
 | `node bin/cli.js installed` | Show installed skills |
 
 ## Build & Development
@@ -214,3 +217,35 @@ node --inspect bin/cli.js list
 # Check compiled output
 ls dist/
 ```
+
+## File Writing Rules (MANDATORY)
+
+**NEVER write an entire file at once.** Always use chunk-by-chunk editing:
+
+1. **Use the Edit tool** (find-and-replace) for all file modifications — insert, update, or delete content in targeted chunks
+2. **Only use the Write tool** for brand-new files that don't exist yet, AND only if the file is small (< 50 lines)
+3. **For new large files (50+ lines):** Write a skeleton first (headers/structure only), then use Edit to fill in each section chunk by chunk
+4. **Why:** Writing entire files at once causes truncation, context window overflow, and silent data loss on large files
+
+**Anti-patterns (NEVER do these):**
+- `Write` tool to overwrite an existing file with full content
+- `Write` tool to create a file with 100+ lines in one shot
+- Regenerating an entire file to change a few lines
+
+## Development Workflow
+
+### OpenSpec-First (MANDATORY)
+
+**Every feature, fix, or refactor MUST go through OpenSpec before implementation.**
+
+1. **Propose** → `openspec new change "<name>"` → create proposal.md, design.md, specs, tasks.md
+2. **Validate** → `openspec validate "<name>" --strict --no-interactive`
+3. **Implement** → `/opsx-apply` or work through tasks.md
+4. **Archive** → `openspec archive "<name>"` after merge
+
+**No exceptions.** Do not skip straight to coding. The proposal captures *why*, the spec captures *what*, the design captures *how*, and tasks capture *the plan*. This applies to:
+- New features (even small ones)
+- Bug fixes that change behavior
+- Refactors that touch multiple files
+
+**Only skip OpenSpec for:** typo fixes, dependency bumps, or single-line config changes.

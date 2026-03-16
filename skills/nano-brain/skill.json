@@ -1,15 +1,25 @@
 {
     "name": "nano-brain",
-    "version": "1.0.0",
-    "description": "Persistent memory for AI coding agents. Hybrid search (BM25 + semantic + LLM reranking) across past sessions, codebase, notes, and daily logs.",
+    "version": "2.1.0",
+    "description": "Persistent memory and code intelligence for AI coding agents. Hybrid search, cross-session recall, symbol analysis, and impact checks.",
     "compatibility": "OpenCode",
     "agent": null,
     "commands": [],
+    "mcp": {
+        "nano-brain": {
+            "type": "remote",
+            "url": "http://host.docker.internal:3100/mcp",
+            "enabled": true
+        }
+    },
     "tags": [
         "memory",
         "persistence",
         "search",
         "context",
-        "sessions"
+        "sessions",
+        "code-intelligence",
+        "symbol-analysis",
+        "impact-analysis"
     ]
 }

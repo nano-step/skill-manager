@@ -14,11 +14,11 @@ const registry_1 = require("./registry");
 const state_1 = require("./state");
 const config_1 = require("./config");
 const remote_registry_1 = require("./remote-registry");
-async function installFromDir(manifest, sourceDir, paths, source) {
+async function installFromDir(manifest, sourceDir, paths, source, force) {
     const state = await (0, state_1.loadState)(paths.stateFilePath);
     const existing = state.skills[manifest.name];
-    if (existing && existing.version === manifest.version) {
-        console.log(chalk_1.default.yellow(`Skill "${manifest.name}" is already installed at v${manifest.version}.`));
+    if (existing && existing.version === manifest.version && !force) {
+        console.log(chalk_1.default.yellow(`Skill "${manifest.name}" is already installed at v${manifest.version}. Use --force to reinstall.`));
         return;
     }
     await (0, utils_1.ensureDirExists)(paths.skillsDir);
@@ -34,13 +34,14 @@ async function installFromDir(manifest, sourceDir, paths, source) {
     };
     await (0, state_1.saveState)(paths.stateFilePath, state);
     const sourceLabel = source === "private" ? chalk_1.default.magenta(" (private)") : "";
-    console.log(chalk_1.default.green(`✓ Installed ${manifest.name} v${manifest.version}${sourceLabel}`));
+    const forceLabel = force && existing ? " (forced)" : "";
+    console.log(chalk_1.default.green(`✓ Installed ${manifest.name} v${manifest.version}${sourceLabel}${forceLabel}`));
 }
-async function installSkill(name, paths) {
+async function installSkill(name, paths, force) {
     const localManifest = await (0, registry_1.getSkillManifest)(paths.packageSkillsDir, name);
     if (localManifest) {
         const packageSkillDir = path_1.default.join(paths.packageSkillsDir, name);
-        await installFromDir(localManifest, packageSkillDir, paths, "public");
+        await installFromDir(localManifest, packageSkillDir, paths, "public", force);
         return;
     }
     const remoteManifest = await (0, remote_registry_1.getRemoteSkillManifest)(name);
@@ -48,7 +49,7 @@ async function installSkill(name, paths) {
         const tempDir = await (0, remote_registry_1.downloadSkillToTemp)(name);
         if (tempDir) {
             try {
-                await installFromDir(remoteManifest, tempDir, paths, "private");
+                await installFromDir(remoteManifest, tempDir, paths, "private", force);
             }
             finally {
                 await fs_extra_1.default.remove(tempDir);
@@ -95,7 +96,7 @@ async function removeSkill(name, paths) {
     await (0, state_1.saveState)(paths.stateFilePath, state);
     console.log(chalk_1.default.green(`✓ Removed ${name}`));
 }
-async function updateSkill(name, paths) {
+async function updateSkill(name, paths, force) {
     const state = await (0, state_1.loadState)(paths.stateFilePath);
     if (!state.skills[name]) {
         console.error(chalk_1.default.red(`Skill "${name}" is not installed. Use 'skill-manager install ${name}' first.`));
@@ -104,8 +105,8 @@ async function updateSkill(name, paths) {
     const installed = state.skills[name];
     const localManifest = await (0, registry_1.getSkillManifest)(paths.packageSkillsDir, name);
     if (localManifest) {
-        if (installed.version === localManifest.version) {
-            console.log(chalk_1.default.yellow(`Skill "${name}" is already at v${localManifest.version} (up to date).`));
+        if (installed.version === localManifest.version && !force) {
+            console.log(chalk_1.default.yellow(`Skill "${name}" is already at v${localManifest.version} (up to date). Use --force to override.`));
             return;
         }
         const packageSkillDir = path_1.default.join(paths.packageSkillsDir, name);
@@ -120,13 +121,14 @@ async function updateSkill(name, paths) {
             location: installed.location,
         };
         await (0, state_1.saveState)(paths.stateFilePath, state);
-        console.log(chalk_1.default.green(`✓ Updated ${name} from v${installed.version} to v${localManifest.version}`));
+        const forceLabel = force && installed.version === localManifest.version ? " (forced)" : "";
+        console.log(chalk_1.default.green(`✓ Updated ${name} from v${installed.version} to v${localManifest.version}${forceLabel}`));
         return;
     }
     const remoteManifest = await (0, remote_registry_1.getRemoteSkillManifest)(name);
     if (remoteManifest) {
-        if (installed.version === remoteManifest.version) {
-            console.log(chalk_1.default.yellow(`Skill "${name}" is already at v${remoteManifest.version} (up to date).`));
+        if (installed.version === remoteManifest.version && !force) {
+            console.log(chalk_1.default.yellow(`Skill "${name}" is already at v${remoteManifest.version} (up to date). Use --force to override.`));
             return;
         }
         const tempDir = await (0, remote_registry_1.downloadSkillToTemp)(name);
@@ -143,7 +145,8 @@ async function updateSkill(name, paths) {
                     location: installed.location,
                 };
                 await (0, state_1.saveState)(paths.stateFilePath, state);
-                console.log(chalk_1.default.green(`✓ Updated ${name} from v${installed.version} to v${remoteManifest.version} (private)`));
+                const remoteForceLabel = force && installed.version === remoteManifest.version ? " (forced)" : "";
+                console.log(chalk_1.default.green(`✓ Updated ${name} from v${installed.version} to v${remoteManifest.version} (private)${remoteForceLabel}`));
             }
             finally {
                 await fs_extra_1.default.remove(tempDir);

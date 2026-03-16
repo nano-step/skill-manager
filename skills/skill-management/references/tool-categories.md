@@ -145,6 +145,58 @@ Notes:
 - Tools require a page context; select or create a page first.
 - Prefer take_snapshot for element discovery before click/hover/drag.
 
+## Memory & Knowledge Category (Example)
+
+Category name: Memory & Knowledge
+Keywords: memory, search, recall, context, session, codebase, knowledge, symbol, impact, dependency, graph, focus
+Description: Persistent memory, hybrid search, code intelligence, and cross-repo symbol analysis via nano-brain.
+
+Example tools that might appear in this category:
+- memory_search
+  - BM25 full-text keyword search across indexed documents.
+- memory_vsearch
+  - Semantic vector search using embeddings.
+- memory_query
+  - Full hybrid search with query expansion, RRF fusion, and LLM reranking.
+- memory_get
+  - Retrieve a document by path or docid.
+- memory_multi_get
+  - Batch retrieve documents by glob pattern or comma-separated list.
+- memory_write
+  - Write content to daily log with workspace context.
+- memory_set
+  - Set/update a keyed memory (overwrites previous value).
+- memory_delete
+  - Delete a keyed memory.
+- memory_keys
+  - List all keyed memories.
+- memory_status
+  - Show index health, collection info, and model status.
+- memory_index_codebase
+  - Index codebase files in the current workspace.
+- memory_update
+  - Trigger immediate reindex of all collections.
+- memory_focus
+  - Get dependency graph context for a specific file.
+- memory_graph_stats
+  - Get statistics about the file dependency graph.
+- memory_symbols
+  - Query cross-repo symbols (Redis keys, PubSub channels, MySQL tables, API endpoints, HTTP calls, Bull queues).
+- memory_impact
+  - Analyze cross-repo impact of a symbol (writers vs readers, publishers vs subscribers).
+- code_context
+  - 360-degree view of a code symbol — callers, callees, cluster, flows, infrastructure connections.
+- code_impact
+  - Analyze impact of changing a symbol — upstream/downstream dependencies, affected flows, risk level.
+- code_detect_changes
+  - Detect changed symbols and affected flows from git diff.
+
+Notes:
+- Memory tools require nano-brain MCP server to be configured.
+- Code intelligence tools require prior indexing via memory_index_codebase.
+- Use memory_query for best quality results (combines BM25 + vector + reranking).
+- Use memory_search for exact keyword matches, memory_vsearch for conceptual search.
+
 ## GitHub Operations Category (Example)
 
 Category name: GitHub Operations
@@ -220,13 +272,18 @@ Example tools that might appear in this category:
 ## Category Boundary Examples
 Use these to avoid misclassification:
 - "take a screenshot" -> Browser Automation
+- "recall past decisions" -> Memory & Knowledge
 - "list pull requests" -> GitHub Operations
 - "list graphql queries" -> GraphQL Introspection
 - "find docs for lodash" -> Documentation Lookup
+- "what calls this function" -> Memory & Knowledge
+- "search past sessions" -> Memory & Knowledge
 
 ## Common Intent Phrases by Category
 Browser intents:
 - "click", "hover", "fill form", "upload file", "take snapshot"
+Memory intents:
+- "recall", "remember", "past session", "what did we do", "search memory", "save decision", "code context", "impact analysis", "what calls", "dependency graph"
 GitHub intents:
 - "get PR", "list issues", "search repo", "read file"
 GraphQL intents:
@@ -242,6 +299,7 @@ Docs intents:
 
 ## Category Ownership Notes (Semantic Only)
 - Browser Automation: runtime web UI interaction and diagnostics.
+- Memory & Knowledge: persistent cross-session memory, hybrid search, code intelligence, and cross-repo symbol analysis.
 - GitHub Operations: repository metadata and collaboration artifacts.
 - GraphQL Introspection: schema discovery and field metadata only.
 - Documentation Lookup: documentation discovery and lookup.

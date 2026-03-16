@@ -19,11 +19,12 @@ async function installFromDir(
   sourceDir: string,
   paths: OpenCodePaths,
   source: "public" | "private",
+  force?: boolean,
 ): Promise<void> {
   const state = await loadState(paths.stateFilePath);
   const existing = state.skills[manifest.name];
-  if (existing && existing.version === manifest.version) {
-    console.log(chalk.yellow(`Skill "${manifest.name}" is already installed at v${manifest.version}.`));
+  if (existing && existing.version === manifest.version && !force) {
+    console.log(chalk.yellow(`Skill "${manifest.name}" is already installed at v${manifest.version}. Use --force to reinstall.`));
     return;
   }
 
@@ -44,14 +45,15 @@ async function installFromDir(
   await saveState(paths.stateFilePath, state);
 
   const sourceLabel = source === "private" ? chalk.magenta(" (private)") : "";
-  console.log(chalk.green(`✓ Installed ${manifest.name} v${manifest.version}${sourceLabel}`));
+  const forceLabel = force && existing ? " (forced)" : "";
+  console.log(chalk.green(`✓ Installed ${manifest.name} v${manifest.version}${sourceLabel}${forceLabel}`));
 }
 
-export async function installSkill(name: string, paths: OpenCodePaths): Promise<void> {
+export async function installSkill(name: string, paths: OpenCodePaths, force?: boolean): Promise<void> {
   const localManifest = await getSkillManifest(paths.packageSkillsDir, name);
   if (localManifest) {
     const packageSkillDir = path.join(paths.packageSkillsDir, name);
-    await installFromDir(localManifest, packageSkillDir, paths, "public");
+    await installFromDir(localManifest, packageSkillDir, paths, "public", force);
     return;
   }
 
@@ -60,7 +62,7 @@ export async function installSkill(name: string, paths: OpenCodePaths): Promise<
     const tempDir = await downloadSkillToTemp(name);
     if (tempDir) {
       try {
-        await installFromDir(remoteManifest, tempDir, paths, "private");
+        await installFromDir(remoteManifest, tempDir, paths, "private", force);
       } finally {
         await fs.remove(tempDir);
       }
@@ -114,7 +116,7 @@ export async function removeSkill(name: string, paths: OpenCodePaths): Promise<v
   console.log(chalk.green(`✓ Removed ${name}`));
 }
 
-export async function updateSkill(name: string, paths: OpenCodePaths): Promise<void> {
+export async function updateSkill(name: string, paths: OpenCodePaths, force?: boolean): Promise<void> {
   const state = await loadState(paths.stateFilePath);
   if (!state.skills[name]) {
     console.error(chalk.red(`Skill "${name}" is not installed. Use 'skill-manager install ${name}' first.`));
@@ -125,8 +127,8 @@ export async function updateSkill(name: string, paths: OpenCodePaths): Promise<v
 
   const localManifest = await getSkillManifest(paths.packageSkillsDir, name);
   if (localManifest) {
-    if (installed.version === localManifest.version) {
-      console.log(chalk.yellow(`Skill "${name}" is already at v${localManifest.version} (up to date).`));
+    if (installed.version === localManifest.version && !force) {
+      console.log(chalk.yellow(`Skill "${name}" is already at v${localManifest.version} (up to date). Use --force to override.`));
       return;
     }
 
@@ -145,14 +147,15 @@ export async function updateSkill(name: string, paths: OpenCodePaths): Promise<v
     };
     await saveState(paths.stateFilePath, state);
 
-    console.log(chalk.green(`✓ Updated ${name} from v${installed.version} to v${localManifest.version}`));
+    const forceLabel = force && installed.version === localManifest.version ? " (forced)" : "";
+    console.log(chalk.green(`✓ Updated ${name} from v${installed.version} to v${localManifest.version}${forceLabel}`));
     return;
   }
 
   const remoteManifest = await getRemoteSkillManifest(name);
   if (remoteManifest) {
-    if (installed.version === remoteManifest.version) {
-      console.log(chalk.yellow(`Skill "${name}" is already at v${remoteManifest.version} (up to date).`));
+    if (installed.version === remoteManifest.version && !force) {
+      console.log(chalk.yellow(`Skill "${name}" is already at v${remoteManifest.version} (up to date). Use --force to override.`));
       return;
     }
 
@@ -173,7 +176,8 @@ export async function updateSkill(name: string, paths: OpenCodePaths): Promise<v
         };
         await saveState(paths.stateFilePath, state);
 
-        console.log(chalk.green(`✓ Updated ${name} from v${installed.version} to v${remoteManifest.version} (private)`));
+        const remoteForceLabel = force && installed.version === remoteManifest.version ? " (forced)" : "";
+        console.log(chalk.green(`✓ Updated ${name} from v${installed.version} to v${remoteManifest.version} (private)${remoteForceLabel}`));
       } finally {
         await fs.remove(tempDir);
       }

@@ -123,6 +123,7 @@ async function run() {
         .command("install [name]")
         .description("Install a skill from the catalog")
         .option("--all", "Install all available skills")
+        .option("--force", "Force reinstall even if same version is installed")
         .action(async (name, options) => {
         const paths = await (0, utils_1.detectOpenCodePaths)();
         await (0, state_1.migrateV4State)(paths.configDir, paths.stateFilePath, paths.skillsDir);
@@ -135,11 +136,11 @@ async function run() {
                 return;
             }
             for (const entry of catalog) {
-                await (0, installer_1.installSkill)(entry.manifest.name, paths);
+                await (0, installer_1.installSkill)(entry.manifest.name, paths, options.force);
             }
         }
         else if (name) {
-            await (0, installer_1.installSkill)(name, paths);
+            await (0, installer_1.installSkill)(name, paths, options.force);
         }
         else {
             console.error(chalk_1.default.red("Please specify a skill name or use --all."));
@@ -158,11 +159,12 @@ async function run() {
     program
         .command("update [name]")
         .description("Update installed skill(s) to latest catalog version")
-        .action(async (name) => {
+        .option("--force", "Force update even if same version is installed")
+        .action(async (name, options) => {
         const paths = await (0, utils_1.detectOpenCodePaths)();
         await (0, state_1.migrateV4State)(paths.configDir, paths.stateFilePath, paths.skillsDir);
         if (name) {
-            await (0, installer_1.updateSkill)(name, paths);
+            await (0, installer_1.updateSkill)(name, paths, options.force);
         }
         else {
             const state = await (0, state_1.loadState)(paths.stateFilePath);
@@ -172,7 +174,7 @@ async function run() {
                 return;
             }
             for (const skillName of installed) {
-                await (0, installer_1.updateSkill)(skillName, paths);
+                await (0, installer_1.updateSkill)(skillName, paths, options.force);
             }
         }
     });

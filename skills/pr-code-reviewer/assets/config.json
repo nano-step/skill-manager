@@ -1,0 +1,47 @@
+{
+  "version": "2.8.0",
+  "workspace": {
+    "name": "my-project",
+    "github": {
+      "owner": "acme-corp",
+      "default_base": "main",
+      "token_env": "GITHUB_TOKEN"
+    },
+    "linear": {
+      "enabled": true,
+      "workspace_id": "acme",
+      "team_id": "ENG",
+      "token_env": "LINEAR_API_KEY",
+      "extract_from": ["branch_name", "pr_description", "pr_title"],
+      "fetch_comments": true,
+      "fetch_attachments": false
+    },
+    "jira": {
+      "instance": "acme.atlassian.net",
+      "project_key": "ACME",
+      "token_env": "JIRA_TOKEN"
+    }
+  },
+  "output": {
+    "directory": ".opencode/reviews",
+    "filename_pattern": "{type}_{identifier}_{date}",
+    "github_comment": false,
+    "notify_user": true
+  },
+  "trace_depth": {
+    "logic": "deep",
+    "style": "shallow",
+    "refactor": "medium"
+  },
+  "report": {
+    "verbosity": "compact",
+    "show_suggestions": false,
+    "show_improvements": true,
+    "max_suggestions_listed": 3
+  },
+  "ignore_patterns": [
+    "*.test.ts",
+    "*.spec.ts",
+    "__mocks__/**"
+  ]
+}

@@ -137,7 +137,8 @@ export async function run(): Promise<void> {
     .command("install [name]")
     .description("Install a skill from the catalog")
     .option("--all", "Install all available skills")
-    .action(async (name: string | undefined, options: { all?: boolean }) => {
+    .option("--force", "Force reinstall even if same version is installed")
+    .action(async (name: string | undefined, options: { all?: boolean; force?: boolean }) => {
       const paths = await detectOpenCodePaths();
       await migrateV4State(paths.configDir, paths.stateFilePath, paths.skillsDir);
 
@@ -151,10 +152,10 @@ export async function run(): Promise<void> {
           return;
         }
         for (const entry of catalog) {
-          await installSkill(entry.manifest.name, paths);
+          await installSkill(entry.manifest.name, paths, options.force);
         }
       } else if (name) {
-        await installSkill(name, paths);
+        await installSkill(name, paths, options.force);
       } else {
         console.error(chalk.red("Please specify a skill name or use --all."));
         console.error(chalk.yellow("Run 'skill-manager list' to see available skills."));
@@ -174,12 +175,13 @@ export async function run(): Promise<void> {
   program
     .command("update [name]")
     .description("Update installed skill(s) to latest catalog version")
-    .action(async (name: string | undefined) => {
+    .option("--force", "Force update even if same version is installed")
+    .action(async (name: string | undefined, options: { force?: boolean }) => {
       const paths = await detectOpenCodePaths();
       await migrateV4State(paths.configDir, paths.stateFilePath, paths.skillsDir);
 
       if (name) {
-        await updateSkill(name, paths);
+        await updateSkill(name, paths, options.force);
       } else {
         const state = await loadState(paths.stateFilePath);
         const installed = Object.keys(state.skills);
@@ -188,7 +190,7 @@ export async function run(): Promise<void> {
           return;
         }
         for (const skillName of installed) {
-          await updateSkill(skillName, paths);
+          await updateSkill(skillName, paths, options.force);
         }
       }
     });

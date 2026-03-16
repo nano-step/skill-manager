@@ -16,8 +16,13 @@
   },
   {
     "name": "pr-code-reviewer",
-    "version": "2.6.0",
-    "description": "Comprehensive code review with 4 parallel subagents and GitHub Copilot-style PR summaries"
+    "version": "7.1.0",
+    "description": "PR review with MANDATORY cross-repo consumer search, nano-brain code intelligence, and better-context structural analysis. READ-ONLY — no comments, pushes, or code fixes."
+  },
+  {
+    "name": "deep-design",
+    "version": "1.0.0",
+    "description": "Multi-agent planning pipeline: Metis + Oracle → Synthesis → OpenSpec → Momus review"
   },
   {
     "name": "rri-t-testing",
