@@ -2,6 +2,15 @@
 
 Use this checklist for every PR review. Check off each item as you complete it.
 
+## Setup Check (Phase -2)
+
+- [ ] Check if `.opencode/code-reviewer.json` exists
+- [ ] If exists: read `stack` field → resolve framework rule files → store as `$FRAMEWORK_RULES`
+- [ ] If exists: read `agents` field → validate workspace_root, AGENTS.md, .agents/ dirs exist
+- [ ] If missing (or `/review --setup`): read `references/setup-wizard.md`, run wizard, write config
+- [ ] Confirm which framework rule files will be loaded (only stack-matching files)
+- [ ] Confirm agents knowledge base paths (workspace_root + which dirs found)
+
 ## Resume Detection (Phase -1)
 
 - [ ] Look for existing checkpoint: `find /tmp -maxdepth 1 -type d -name "pr-review-${repo}-${pr_number}-*"`
@@ -15,7 +24,7 @@ Use this checklist for every PR review. Check off each item as you complete it.
 
 - [ ] Extract repo info: `owner/repo`, `pr_number`, `head_branch`
 - [ ] Create unique temp dir: `/tmp/pr-review-{repo}-{pr}-{timestamp}`
-- [ ] Clone repo to temp dir (shallow clone with `--depth=50`)
+- [ ] Clone repo to temp dir (shallow clone with `--depth=1`)
 - [ ] Verify correct branch is checked out (`git log --oneline -1`)
 - [ ] Record `$REVIEW_DIR` path for all subsequent phases
 - [ ] Print confirmation with path and branch name
@@ -24,10 +33,14 @@ Use this checklist for every PR review. Check off each item as you complete it.
 
 ## Context Gathering (Phase 1)
 
+- [ ] Read `{workspace_root}/AGENTS.md` → identify PR repo's domain
+- [ ] Read `.agents/_repos/{repo-name}.md` → repo-specific context
+- [ ] Read `.agents/_domains/{domain}.md` → domain context
+- [ ] Store combined as `$AGENTS_CONTEXT`
 - [ ] Get PR metadata: title, description, author, base branch
 - [ ] Get changed files with diff
 - [ ] Read full file context from `$REVIEW_DIR` (not workspace repo)
-- [ ] Classify each file: LOGIC / STYLE / REFACTOR / NEW
+- [ ] Classify each file: LOGIC / DELETION / STYLE / REFACTOR / NEW
 - [ ] Query nano-brain for past context on changed modules
 - [ ] Save checkpoint: `.checkpoints/phase-1-context.json`
 - [ ] Update manifest: `completed_phase: 1`, `next_phase: 1.5`
@@ -77,11 +90,31 @@ Use this checklist for every PR review. Check off each item as you complete it.
 ## Refinement (Phase 4)
 
 - [ ] Merge and deduplicate findings across agents
+- [ ] Consensus scoring: 2+ agents flagged same issue → boost confidence to high
+- [ ] Auto-downgrade: single agent + no evidence + critical/warning → suggestion
 - [ ] Apply severity filter (critical/warning keep, suggestion count-only)
 - [ ] Gap analysis — any subagent fail? Unreviewed files?
 - [ ] Second pass on gaps if needed
 - [ ] Save checkpoint: `.checkpoints/phase-4-refined.json`
-- [ ] Update manifest: `completed_phase: 4`, `next_phase: 5`
+- [ ] Update manifest: `completed_phase: 4`, `next_phase: 4.5`
+
+## Verification Spot-Check (Phase 4.5)
+
+- [ ] Read `references/verification-protocol.md`
+- [ ] For each critical/warning finding: read cited code at evidence file:line in `$REVIEW_DIR`
+- [ ] Mark each: `verified:true` (keep) | `verified:false` (drop) | `verified:unverifiable` (downgrade to suggestion)
+- [ ] If no critical/warning findings: skip to Phase 4.6
+- [ ] Save checkpoint: `.checkpoints/phase-4.5-verification.json`
+- [ ] Update manifest: `completed_phase: 4.5`, `next_phase: 4.6`
+
+## Confidence Scoring (Phase 4.6)
+
+- [ ] Read `references/confidence-scoring.md`
+- [ ] Compute accuracy_rate, consensus_rate, evidence_rate
+- [ ] Compute overall score (0–100)
+- [ ] Apply gate: < 60 → add 🔴 warning, 60–79 → add ⚠️ warning, 80+ → proceed normally
+- [ ] Save checkpoint: `.checkpoints/phase-4.6-confidence.json`
+- [ ] Update manifest: `completed_phase: 4.6`, `next_phase: 5`
 
 ## Report (Phase 5)
 
@@ -97,7 +130,7 @@ Use this checklist for every PR review. Check off each item as you complete it.
 ## Save to Memory (Phase 5.5)
 
 - [ ] Write key findings to nano-brain with tags: review, {repo}
-- [ ] Verify searchable (`npx nano-brain search "PR {number}"`)
+- [ ] Verify searchable (`curl -s localhost:3100/api/search -d '{"query":"PR {number}"}'`)
 - [ ] Update manifest: `completed_phase: 5.5`, `next_phase: 6`
 
 ## Cleanup (Phase 6)

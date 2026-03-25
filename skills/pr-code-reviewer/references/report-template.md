@@ -30,6 +30,11 @@ Create `.opencode/reviews/` if it does not exist.
 {If Phase 4.5 verified all findings: "🔍 All findings verified"}
 {If Phase 4.5 was skipped (no critical/warning): omit this line entirely}
 
+📊 **Result Confidence: {emoji} {score}/100**
+   Accuracy: {accuracy_rate}% ({false_positives} false positive(s) caught) | Consensus: {consensus_rate}% | Evidence: {evidence_rate}%
+{If score < 80: "⚠️ {gate_message}"}
+{If score >= 80: omit the warning line}
+
 ## What This PR Does
 
 {1-3 sentences. Start with action verb. Include business impact if clear.}

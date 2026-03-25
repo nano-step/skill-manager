@@ -1,29 +1,71 @@
 # PR Code Reviewer Changelog
 
-## v3.1.0 (2026-03-16) - Verification Pipeline (False Positive Reduction)
-
-**FIX**: ~50% of critical/warning findings were false positives because subagents inspected code locally without verifying the full execution context. This release adds a 3-layer verification pipeline that reduces false positives to ~10%.
+## v3.3.0 (2026-03-24) - Stack-Aware Setup Wizard + Token Efficiency
 
 ### Added
-- **VERIFICATION PROTOCOL** in all 4 subagent prompts — mandatory 4-step process (IDENTIFY → TRACE → VERIFY → DECIDE) before reporting any critical/warning finding
-- **Evidence field** (`evidence`, `confidence`, `trace_path`) in finding schema — subagents must cite concrete file:line proof for critical/warning findings
-- **Evidence examples** (good vs bad) in filtering rules — teaches subagents what constitutes valid evidence
-- **Consensus scoring** in Phase 4 — tracks how many subagents independently flagged the same issue; single-agent findings without evidence are auto-downgraded
-- **Phase 4.5: Orchestrator Verification Spot-Check** — orchestrator reads actual code at cited evidence locations to verify critical/warning findings (30s timeout per finding)
-- **`phase-4.5-verification.json` checkpoint** — tracks verification results for resumability
-- **Verification metadata in report TL;DR** — shows how many findings were dropped as false positives
+- **Phase -2: Setup Check** — runs before Phase -1 on first use (no config) or `/review --setup`
+  - Interactive wizard: asks 5 questions (frontend, backend, ORM, language, state management)
+  - Writes `.opencode/code-reviewer.json` with `stack` field
+  - Shows confirmation with which framework rule files will be used
+- **3 new framework rule files**: `nextjs.md`, `react.md`, `prisma.md`
+- **`references/setup-wizard.md`** — full wizard flow, question text, stack→file mapping
+- **`stack` field** added to `assets/config.json` schema
+
+### Fixed
+- **Token efficiency**: SKILL.md now has an explicit on-demand loading table — each reference file is read only when its phase runs, not all at startup. Prevents 79k+ token bloat.
+- **Subagent 3 (LIBRARIAN) missing `TRACED_DEPENDENCIES`** — added to prompt template
+- **Stale framework reference in LIBRARIAN**: "Next.js, React, Express" → "check ## FRAMEWORK RULES above for project-specific patterns"
+- **`database.md` checklist missing from SKILL.md reference table** — added
+- **`setup-wizard.md` added to SKILL.md reference table**
+- **review-checklist.md missing Phase 4.5 and 4.6** — both added with full step-by-step items
 
 ### Changed
-- Phase 4 now includes consensus scoring step after deduplication
-- Phase 4 checkpoint `next_phase` updated from `5` to `4.5`
-- Manifest schema includes Phase 4.5 in `phase_status`
-- Finding schema in SKILL.md Phase 3 updated to include new fields
-- All 4 subagent return format sections updated with `evidence`, `confidence`, `trace_path`
+- Framework rules no longer all loaded at once — only stack-matching files from config
+- `$FRAMEWORK_RULES` variable replaces hardcoded framework mentions in subagent prompts
+- All 4 subagent prompts now include `## FRAMEWORK RULES` section
 
-### How It Works
-1. **Layer 1 (Subagent self-verification)**: Subagents trace error handling to HTTP boundary, null safety to data source, framework patterns to usage context — before reporting
-2. **Layer 2 (Orchestrator spot-check)**: Orchestrator reads cited files and verifies evidence claims for critical/warning findings
-3. **Layer 3 (Consensus scoring)**: Multi-agent agreement boosts confidence; single-agent findings without evidence are downgraded
+---
+
+## v3.2.0 (2026-03-14) - Consensus Scoring + Evidence Enforcement
+
+### Added
+- **Consensus scoring in Phase 4**: findings flagged by 2+ agents → confidence boosted to `high`
+- **Auto-downgrade rule**: single agent + missing evidence + critical/warning → auto-downgraded to `suggestion`
+- **Phase 4.6: Result Confidence Assessment** — scores review quality 0–100 from accuracy, consensus, evidence rates
+- **Phase 4.5: Orchestrator Verification Spot-Check** — orchestrator reads cited code to catch surviving false positives
+- `evidence` field is REQUIRED for all critical/warning findings (subagent prompts updated)
+- `confidence` field added: `high` | `medium` | `low`
+- `trace_path` optional field added for verification audit trail
+
+### Changed
+- Phase 4 now has two sub-phases: 4.5 (verification) and 4.6 (confidence)
+- Report TL;DR now includes Result Confidence score
+
+---
+
+## v3.1.0 (2026-03-12) - Linear Ambiguity Detection + Premise Check
+
+### Added
+- **Phase 1.5 Ambiguity Detection**: when acceptance criteria are vague, flag as warning and identify multiple interpretations
+- **DELETION classification**: explicit new change type (distinct from REFACTOR) requiring Premise Check
+- **Premise Check in Phase 2**: for DELETION changes — answers why code existed, whether removal is correct
+- **Premise Check section in report** — only shown for DELETION PRs
+- **Cross-repo API tracing in Phase 2**: trace hardcoded frontend values vs backend config (e.g., cache TTLs)
+
+---
+
+## v3.0.0 (2026-03-10) - Unified Skill Rename + Phase -1 Resume
+
+### Added
+- **Phase -1: Resume Detection** — checks for existing checkpoints before starting
+- Checkpoint manifest schema with `head_sha` validation (stale checkpoint detection)
+- Skill renamed from project-level name to `pr-code-reviewer` for clarity
+
+### Changed
+- SKILL.md restructured: inline details moved to reference files (`subagent-prompts.md`, `report-template.md`, etc.)
+- Version reset to 3.x to reflect this is the unified project + global skill
+
+---
 
 ## v2.7.0 (2026-03-09) - Clone to Temp Folder
 

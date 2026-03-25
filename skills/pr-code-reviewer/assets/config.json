@@ -1,5 +1,18 @@
 {
-  "version": "2.8.0",
+  "version": "3.3.0",
+  "stack": {
+    "frontend": "nuxt",
+    "backend": "express",
+    "orm": "typeorm",
+    "language": "typescript",
+    "state": "pinia"
+  },
+  "agents": {
+    "workspace_root": "/path/to/workspace",
+    "has_agents_md": true,
+    "has_repos_dir": true,
+    "has_domains_dir": true
+  },
   "workspace": {
     "name": "my-project",
     "github": {

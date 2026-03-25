@@ -4,6 +4,8 @@ Launch ALL 4 subagents simultaneously with `run_in_background: true`.
 
 **IMPORTANT**: Include the PR Summary in each subagent's context so they understand the overall change.
 
+**IMPORTANT**: Include `$FRAMEWORK_RULES` (resolved in Phase -2 from `.opencode/code-reviewer.json` stack config) in each subagent prompt. This contains ONLY the framework rules relevant to this project's stack — not all framework rules.
+
 **IMPORTANT**: If project memory results were gathered in Phase 1, include them as a `## NANO-BRAIN MEMORY` section in each subagent's prompt.
 
 **IMPORTANT**: Include `$REVIEW_DIR` (the temp clone path from Phase 0) in each subagent's prompt. All file reads, grep searches, and LSP operations MUST target this path — NOT the original workspace repo. This ensures subagents see the actual PR branch code.
@@ -50,9 +52,10 @@ What looks wrong? State the specific concern.
 ### Step 2: TRACE
 Read the surrounding context beyond the changed file. For each concern type:
 - **Error handling**: Trace the throw/error path UP to the HTTP boundary (controller/route handler). Check for try-catch at EVERY layer between the throw and the controller.
-- **Null safety**: Trace the data DOWN to its source (SQL query, API contract, constructor). Check if the source guarantees non-null (e.g., DB primary key, NOT NULL column, JOIN constraint).
+- **Null safety**: Trace the data DOWN to its source (SQL query, API contract, constructor). Check if the source guarantees non-null (e.g., DB primary key, NOT NULL column, JOIN constraint). Verify basic language semantics (e.g., `Array.isArray(null)` returns `false` — no TypeError; `Boolean(undefined)` returns `false`).
 - **Framework patterns**: Check if the specific usage context makes the pattern safe (e.g., Pinia singleton backing a composable, client-only component, intentionally non-reactive value).
 - **Logic errors**: Construct a CONCRETE triggering scenario with specific input values that would cause the bug.
+- **Redundant/unnecessary code**: Find ALL callers of the function before judging its internals. A function called from multiple paths with different inputs may need logic that looks redundant from one caller's perspective but is necessary for another.
 
 ### Step 3: VERIFY
 Can you PROVE this is a real problem? You need ONE of:
@@ -103,20 +106,26 @@ delegate_task({
     ## TRACED DEPENDENCIES
     ${tracedDependencies}
     
+    ## AGENTS.MD CONTEXT (workspace domain map + repo relationships)
+    ${agentsContext || "No AGENTS.md found in workspace root"}
+
     ## NANO-BRAIN MEMORY (past sessions, reviews, decisions)
     ${projectMemory || "No nano-brain memory available for this workspace"}
-    
+
     ## LINEAR TICKET CONTEXT (from linked Linear ticket)
     ${linearTicketContext || "No Linear ticket linked to this PR"}
-    
+
     ## CROSS-REPO TRACING (from Phase 2 — backend data flow analysis)
     ${crossRepoTracing || "No cross-repo tracing performed"}
-    
+
     ## PREMISE CHECK (for DELETION changes — why the code existed)
     ${premiseCheck || "Not a DELETION change — no premise check needed"}
-    
+
+    ## FRAMEWORK RULES (project-specific — from stack config)
+    ${frameworkRules || "No framework rules configured — run /review --setup to configure"}
+
     ${FILTERING_RULES}
-    
+
     ## TASK
     Analyze code quality, patterns, and improvement opportunities
     
@@ -173,9 +182,12 @@ delegate_task({
     
     ## PREMISE CHECK (for DELETION changes — why the code existed)
     ${premiseCheck || "Not a DELETION change — no premise check needed"}
-    
+
+    ## FRAMEWORK RULES (project-specific — from stack config)
+    ${frameworkRules || "No framework rules configured — run /review --setup to configure"}
+
     ${FILTERING_RULES}
-    
+
     ## TASK
     Deep security, logic analysis, and logic improvement opportunities
     
@@ -219,13 +231,16 @@ delegate_task({
     All file reads and searches MUST use this path (temp clone of PR branch):
       ${REVIEW_DIR}
     Do NOT read from the original workspace repo — it may be on a different branch.
-    
+
     ## PR SUMMARY
     ${prSummary}
-    
+
     ## CHANGED FILES
     ${changedFilesWithDiff}
-    
+
+    ## TRACED DEPENDENCIES
+    ${tracedDependencies}
+
     ## NANO-BRAIN MEMORY (past sessions, reviews, decisions)
     ${projectMemory || "No nano-brain memory available for this workspace"}
     
@@ -237,14 +252,17 @@ delegate_task({
     
     ## PREMISE CHECK (for DELETION changes — why the code existed)
     ${premiseCheck || "Not a DELETION change — no premise check needed"}
-    
+
+    ## FRAMEWORK RULES (project-specific — from stack config)
+    ${frameworkRules || "No framework rules configured — run /review --setup to configure"}
+
     ${FILTERING_RULES}
-    
+
     ## TASK
     Best practices review and idiomatic improvement opportunities
-    
+
     ## CHECK
-    1. Framework anti-patterns (Next.js, React, Express, etc.)
+    1. Framework anti-patterns (check ## FRAMEWORK RULES above for project-specific patterns)
     2. Library misuse — using APIs incorrectly or suboptimally
     3. **Idiomatic improvements** — more idiomatic usage of language/framework features
     4. Missing docs ONLY on public APIs or complex algorithms
@@ -295,9 +313,12 @@ delegate_task({
     
     ## PREMISE CHECK (for DELETION changes — why the code existed)
     ${premiseCheck || "Not a DELETION change — no premise check needed"}
-    
+
+    ## FRAMEWORK RULES (project-specific — from stack config)
+    ${frameworkRules || "No framework rules configured — run /review --setup to configure"}
+
     ${FILTERING_RULES}
-    
+
     ## TASK
     Test coverage, integration analysis, and performance improvement opportunities
     

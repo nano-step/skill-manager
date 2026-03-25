@@ -5,30 +5,26 @@ nano-brain provides persistent memory across sessions. The reviewer uses it for 
 - Known issues and tech debt in affected modules
 - Prior discussions about the same code areas
 
-## Access Method: CLI
+## Access Method: HTTP API
 
-All nano-brain operations use the CLI via Bash tool:
+All nano-brain operations use HTTP API (nano-brain runs as Docker service on port 3100):
 
-| Need | CLI Command |
-|------|-------------|
-| Hybrid search (best quality) | `npx nano-brain query "search terms"` |
-| Keyword search (function name, error) | `npx nano-brain query "exact term" -c codebase` |
-| Save review findings | `npx nano-brain write "content" --tags=review` |
-
-## Setup
-
-Run `/nano-brain-init` in the workspace, or `npx nano-brain init --root=/path/to/workspace`.
+| Need | Command |
+|------|---------|
+| Hybrid search (best quality) | `curl -s localhost:3100/api/query -d '{"query":"search terms"}'` |
+| Keyword search (function name, error) | `curl -s localhost:3100/api/search -d '{"query":"exact term"}'` |
+| Save review findings | `curl -s localhost:3100/api/write -d '{"content":"...","tags":"review"}'` |
 
 ## Phase 1 Memory Queries
 
 For each significantly changed file/module:
-- **Hybrid search**: `npx nano-brain query "<module-name>"` (best quality, combines BM25 + vector + reranking)
-- **Scoped search**: `npx nano-brain query "<function-name>" -c codebase` for code-specific results
+- **Hybrid search**: `curl -s localhost:3100/api/query -d '{"query":"<module-name>"}'` (best quality, combines BM25 + vector + reranking)
+- **Scoped search**: `curl -s localhost:3100/api/query -d '{"query":"<function-name>","collection":"codebase"}'` for code-specific results
 
 Specific queries:
-- Past review findings: `npx nano-brain query "review <module-name>"`
-- Architectural decisions: `npx nano-brain query "<module-name> architecture design decision"`
-- Known issues: `npx nano-brain query "<function-name> bug issue regression"`
+- Past review findings: `curl -s localhost:3100/api/query -d '{"query":"review <module-name>"}'`
+- Architectural decisions: `curl -s localhost:3100/api/query -d '{"query":"<module-name> architecture design decision"}'`
+- Known issues: `curl -s localhost:3100/api/query -d '{"query":"<function-name> bug issue regression"}'`
 
 Collect relevant memory hits as `projectMemory` context for subagents.
 
@@ -36,7 +32,7 @@ Collect relevant memory hits as `projectMemory` context for subagents.
 
 Query nano-brain for known issues:
 ```bash
-npx nano-brain query "<function-name> bug issue edge case regression"
+curl -s localhost:3100/api/query -d '{"query":"<function-name> bug issue edge case regression"}'
 ```
 
 ## Phase 5.5: Save Review to nano-brain
@@ -44,18 +40,7 @@ npx nano-brain query "<function-name> bug issue edge case regression"
 After generating the report, save key findings for future sessions:
 
 ```bash
-npx nano-brain write "## Code Review: PR #<number> - <title>
-Date: <date>
-Files: <changed_files>
-
-### Key Findings
-<critical_issues_summary>
-<warnings_summary>
-
-### Decisions
-<architectural_decisions_noted>
-
-### Recommendation: <APPROVE|REQUEST_CHANGES|COMMENT>" --tags=review,pr-<number>
+curl -s localhost:3100/api/write -d '{"content":"## Code Review: PR #<number> - <title>\nDate: <date>\nFiles: <changed_files>\n\n### Key Findings\n<critical_issues_summary>\n<warnings_summary>\n\n### Decisions\n<architectural_decisions_noted>\n\n### Recommendation: <APPROVE|REQUEST_CHANGES|COMMENT>","tags":"review,pr-<number>"}'
 ```
 
 This ensures future reviews can reference past findings on the same codebase areas.

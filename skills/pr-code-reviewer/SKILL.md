@@ -1,31 +1,24 @@
 ---
 name: pr-code-reviewer
-description: "Comprehensive code review with 4 parallel subagents, smart tracing, iterative refinement, workspace-aware configuration, and GitHub Copilot-style PR summaries."
+description: "Review pull requests and staged changes for bugs, security issues, and code quality. Use this skill whenever the user mentions: review PR, code review, check this PR, review my changes, /review, PR #123, look at this diff, is this safe to merge, or provides a GitHub PR URL. Also triggers on: 'what do you think of these changes', 'review --staged', 'check my code before merge'."
 compatibility: "OpenCode with nano-brain"
 metadata:
   author: Sisyphus
-  version: "3.1.0"
+  version: "3.3.0"
   severity-levels: ["critical", "warning", "improvement", "suggestion"]
 ---
 
 # PR Code Reviewer
 
-**Version**: 3.1.0 | **Architecture**: 4 Parallel Subagents + Verification Pipeline | **Memory**: nano-brain
+**Version**: 3.3.0 | **Architecture**: 4 Parallel Subagents + Verification Pipeline + Confidence Scoring | **Memory**: nano-brain
 
 ## Overview
 
 Comprehensive PR reviewer: gathers full context, applies smart tracing by change type, runs four specialized subagents in parallel, iteratively refines findings, and produces a **short, actionable report** — only what matters. Also suggests code improvements when opportunities exist.
 
-### NO PHASE SKIPPING (ABSOLUTE RULE)
+### Why Every Phase Runs
 
-**Every phase MUST be executed for every review, regardless of PR size.** A 1-line deletion can hide a critical logic bug. A "trivial" change can break cross-repo contracts. The phases exist because each one catches different classes of issues.
-
-- **1-line change?** → Run all phases.
-- **Deletion-only PR?** → Run all phases. Deletions are MORE dangerous, not less.
-- **"Obviously safe"?** → Run all phases. Your confidence is the risk.
-- **Only STYLE changes?** → Run all phases. Verify no hidden logic changes.
-
-**The ONLY exception**: Phase 0 (clone) is skipped for `--staged` local reviews. Every other phase runs unconditionally.
+Each phase catches a different class of issue. A 1-line deletion can hide a critical logic bug that only cross-repo tracing (Phase 2) would reveal. A "trivial" style change can mask a hidden logic change that only subagent consensus (Phase 3-4) would catch. The only exception: Phase 0 (clone) is skipped for `--staged` local reviews.
 
 ## Report Philosophy
 
@@ -39,6 +32,26 @@ Comprehensive PR reviewer: gathers full context, applies smart tracing by change
 - **TL;DR at the top** — verdict + issue counts in 3 lines, reader decides whether to scroll
 
 **Filtering rule**: If a finding wouldn't make a senior engineer stop and think, drop it.
+
+## Token Efficiency — Read Files On-Demand
+
+**Do NOT load all reference files upfront.** Read each file only when the relevant phase runs:
+
+| Phase | Read at start of phase |
+|-------|------------------------|
+| Phase -2 | `references/setup-wizard.md` (only if no config) |
+| Phase 1 | `{workspace_root}/AGENTS.md` + `.agents/_repos/{repo}.md` + `.agents/_domains/{domain}.md` |
+| Phase 1 | `references/nano-brain-integration.md` |
+| Phase 2 | Domain checklist for changed file types (one file only) |
+| Phase 3 | `references/subagent-prompts.md` + stack framework rules (from config) |
+| Phase 4 | `references/confidence-scoring.md` |
+| Phase 4.5 | `references/verification-protocol.md` |
+| Phase 5 | `references/report-template.md` |
+| Phase 5.5 | `references/nano-brain-integration.md` (save section only) |
+
+Framework rules: load ONLY the files matching `stack` in `.opencode/code-reviewer.json`. Never load all framework rules.
+
+---
 
 ## Prerequisites
 
@@ -98,69 +111,40 @@ Check for config at `.opencode/code-reviewer.json`. **Full example**: [config.js
 
 ## Checkpoint System
 
-Reviews are resumable via checkpoints saved at each phase. If the agent crashes mid-review, you can resume from the last completed phase instead of starting over.
+Reviews are resumable via checkpoints saved at each phase. If the agent crashes mid-review, resume from the last completed phase.
 
-### Checkpoint Directory
+**Full details**: [checkpoint-system.md](references/checkpoint-system.md) — manifest schema, checkpoint files, Phase 3 special handling.
 
-**For PR Reviews:** `$REVIEW_DIR/.checkpoints/` (inside the temp clone directory)
-**For Local Reviews (`--staged`):** `{current_working_directory}/.checkpoints/`
-
-Checkpoints are automatically removed when the clone directory is deleted (Phase 6 cleanup).
-
-### Checkpoint Files
-
-| File | Content | Updated When |
-|------|---------|--------------|
-| `manifest.json` | Master state tracker | After every phase |
-| `phase-0-clone.json` | Clone metadata (clone_dir, branches, head_sha, files_changed) | Phase 0 |
-| `phase-1-context.json` | PR metadata, file classifications | Phase 1 |
-| `phase-1.5-linear.json` | Linear ticket context, acceptance criteria | Phase 1.5 |
-| `phase-2-tracing.json` | Smart tracing results per file | Phase 2 |
-| `phase-2.5-summary.json` | PR summary text | Phase 2.5 |
-| `phase-3-subagents.json` | Subagent findings (updated after EACH subagent completes) | Phase 3 |
-| `phase-4-refined.json` | Deduplicated/filtered findings | Phase 4 |
-| `phase-4.5-verification.json` | Verification results (verified/false/unverifiable counts, dropped/downgraded findings) | Phase 4.5 |
-| `phase-5-report.md` | Copy of final report | Phase 5 |
-
-### Manifest Schema
-
-```json
-{
-  "version": "1.0",
-  "pr": { "repo": "owner/repo", "number": 123, "url": "..." },
-  "clone_dir": "/tmp/pr-review-...",
-  "started_at": "ISO-8601",
-  "last_updated": "ISO-8601",
-  "completed_phase": 2,
-  "next_phase": 2.5,
-  "phase_status": {
-    "0": "complete", "1": "complete", "1.5": "complete",
-    "2": "complete", "2.5": "pending", "3": "pending",
-    "4": "pending", "4.5": "pending", "5": "pending"
-  },
-  "subagent_status": {
-    "explore": "pending", "oracle": "pending",
-    "librarian": "pending", "general": "pending"
-  }
-}
-```
-
-### Phase 3 Special Handling
-
-Phase 3 runs 4 parallel subagents. After **EACH** subagent completes:
-1. Update `phase-3-subagents.json` with that subagent's findings and status
-2. Update `manifest.json` subagent_status to `"complete"` for that subagent
-3. On resume: only run subagents with status != `"complete"`
-
-This allows resuming mid-Phase-3 if only some subagents completed before a crash.
-
-## Workflow (CRITICAL — Follow Exactly, NEVER Skip Phases)
+## Workflow
 
 **Full checklist**: [review-checklist.md](checklists/review-checklist.md) — use this to track every step.
 
-**ABSOLUTE RULE: Execute every phase in order. No phase may be skipped, shortened, or "optimized away" based on PR size, change type, or perceived simplicity. A 1-line deletion PR gets the same phase coverage as a 500-line feature PR.**
+### Phase -2: Setup Check (First Run Detection)
 
-### Phase -1: Resume Detection (MANDATORY — Check Before Starting)
+Before anything else, check if `.opencode/code-reviewer.json` exists.
+
+**If it exists**: read `stack` field → load only the matching framework rule files (listed in setup-wizard.md mapping table). Continue to Phase -1.
+
+**If it doesn't exist** (or user ran `/review --setup`):
+1. Read `references/setup-wizard.md` for the full wizard flow
+2. Ask the 5 setup questions interactively
+3. Write `.opencode/code-reviewer.json` with `stack` field filled in
+4. Show confirmation with which framework rule files will be used
+5. If called as `/review --setup` (not a real review), stop here. Otherwise continue.
+
+**Stack → framework rules mapping** (also in setup-wizard.md):
+- `frontend: nuxt/vue` → `framework-rules/vue-nuxt.md`
+- `frontend: nextjs` → `framework-rules/nextjs.md`
+- `frontend: react` → `framework-rules/react.md`
+- `backend: express` → `framework-rules/express.md`
+- `backend: nestjs` → `framework-rules/nestjs.md`
+- `orm: typeorm` → `framework-rules/typeorm.md`
+- `orm: prisma` → `framework-rules/prisma.md`
+- `language: typescript*` → `framework-rules/typescript.md`
+
+Store the resolved `$FRAMEWORK_RULES` content (concatenated) for Phase 3. If multiple match, concatenate them.
+
+### Phase -1: Resume Detection (Check Before Starting)
 
 Before starting a new review, check for existing checkpoints to resume interrupted reviews.
 
@@ -204,7 +188,7 @@ Before starting a new review, check for existing checkpoints to resume interrupt
 
 **For Local Reviews:** Checkpoint directory is `.checkpoints/` in current working directory. No SHA validation needed (working directory changes are expected).
 
-### Phase 0: Repository Preparation (MANDATORY for PR Reviews)
+### Phase 0: Repository Preparation (PR Reviews Only)
 
 **Why**: Your local repo may be on any branch, have uncommitted changes, or not exist at all. Cloning to a temp folder ensures:
 - You always read the **actual PR branch code**, not whatever is checked out locally
@@ -225,14 +209,14 @@ Before starting a new review, check for existing checkpoints to resume interrupt
    ```
    Format: `/tmp/pr-review-{repo}-{pr_number}-{unix_timestamp}`
 
-3. **Clone the repo** (shallow clone for speed):
+3. **Clone the repo** (minimal shallow clone — only latest commit):
    ```bash
-   git clone --depth=50 --branch="${head_branch}" \
+   git clone --depth=1 --branch="${head_branch}" \
      "https://github.com/${owner}/${repo}.git" "$REVIEW_DIR"
    ```
    If the branch doesn't exist on remote (force-pushed/deleted), fall back to:
    ```bash
-   git clone --depth=50 "https://github.com/${owner}/${repo}.git" "$REVIEW_DIR"
+   git clone --depth=1 "https://github.com/${owner}/${repo}.git" "$REVIEW_DIR"
    cd "$REVIEW_DIR" && gh pr checkout ${pr_number}
    ```
 
@@ -253,11 +237,29 @@ Before starting a new review, check for existing checkpoints to resume interrupt
 
 **For Local Reviews (`--staged`):** Skip Phase 0 — use current working directory.
 
-**CRITICAL**: Store `$REVIEW_DIR` path. Every file read, grep, and subagent prompt MUST reference this path, not the original workspace repo.
+Store `$REVIEW_DIR` path — every file read, grep, and subagent prompt references this path, not the original workspace repo.
 
 **Checkpoint:** Save clone metadata to `.checkpoints/phase-0-clone.json` (clone_dir, branches, head_sha, files_changed) and create `manifest.json` with `completed_phase: 0`, `next_phase: 1`, `phase_status: {"0": "complete", ...}`.
 
 ### Phase 1: Context Gathering
+
+**Step 0 — Load agent knowledge base (MANDATORY if configured):**
+
+Read `agents` config from `.opencode/code-reviewer.json`. If `has_agents_md: true`:
+
+1. **Read `{workspace_root}/AGENTS.md`** — keyword→domain→repo mapping table. Use this to identify which domain the PR's repo belongs to.
+
+2. **Read `{workspace_root}/.agents/_repos/{repo-name}.md`** (if `has_repos_dir: true`) — repo-specific context: framework, port, key files, known issues, cross-repo relationships. `repo-name` comes from the PR's `owner/repo` (e.g., PR from `tradeit-backend` → read `.agents/_repos/tradeit-backend.md`).
+
+3. **Read `{workspace_root}/.agents/_domains/{domain}.md`** (if `has_domains_dir: true`) — domain context for the repo's domain. Domain identified from AGENTS.md mapping (e.g., `tradeit-backend` → `trading-core` domain → read `.agents/_domains/trading-core.md`).
+
+4. **For cross-repo tracing (Phase 2)**: if the PR touches API contracts or shared data, also read:
+   - `.agents/_indexes/by-database.md` — which repo owns which DB table
+   - `.agents/_indexes/by-data-source.md` — which repo consumes which external API
+
+Do NOT read all repo/domain files — only the ones relevant to the PR being reviewed. Store combined result as `$AGENTS_CONTEXT`.
+
+If `agents` config is missing or files not found: continue without it, no error.
 
 **For PR Reviews (GitHub MCP):**
 1. `get_pull_request` → title, description, author, base branch
@@ -276,7 +278,7 @@ Before starting a new review, check for existing checkpoints to resume interrupt
    - **REFACTOR**: Structure changes, no logic change → MEDIUM TRACE
    - **NEW**: New files → FULL REVIEW
 
-   **DELETION classification rules**: Any PR that removes user-facing behavior, error messages, validation logic, UI elements, or API responses MUST be classified as DELETION, not STYLE or REFACTOR. Deletions feel safe but can hide regressions — they require the same depth as LOGIC changes plus a Premise Check.
+   **DELETION classification**: Any PR that removes user-facing behavior, error messages, validation logic, UI elements, or API responses is classified as DELETION, not STYLE or REFACTOR. Deletions feel safe but can hide regressions — they require the same depth as LOGIC changes plus a Premise Check.
 4. Gather full context per changed file from `$REVIEW_DIR`: callers/callees, tests, types, usage sites
 5. **Query nano-brain** for project memory on each changed module — [query patterns](references/nano-brain-integration.md#phase-1-memory-queries)
 6. **Fetch Linear ticket context** (if ticket ID found) — see Phase 1.5
@@ -301,8 +303,8 @@ If a Linear ticket ID was extracted from the branch name, PR description, or PR 
 - Flag in report if PR appears to miss acceptance criteria items
 - Include ticket title + status in report header
 
-**Ambiguity Detection (MANDATORY):**
-If acceptance criteria are vague or open to multiple interpretations (e.g., "fix it", "make it correct", "improve this", "need to fix to make it correct"), you MUST:
+**Ambiguity Detection:**
+If acceptance criteria are vague or open to multiple interpretations (e.g., "fix it", "make it correct", "improve this", "need to fix to make it correct"):
 1. Flag it as a **warning** in the report: *"Acceptance criteria are ambiguous — PR may not match intended fix."*
 2. Identify the multiple interpretations (e.g., "remove the feature" vs "fix the condition")
 3. Evaluate which interpretation the PR implements
@@ -330,7 +332,7 @@ If acceptance criteria are vague or open to multiple interpretations (e.g., "fix
    - Are there related components (backend config, i18n keys, API responses) that depend on this code existing?
 7. Document the Premise Check answers — they feed into the report (Phase 5)
 
-**Cross-Repo API Tracing (MANDATORY for multi-repo workspaces):**
+**Cross-Repo API Tracing** (for multi-repo workspaces):
 For any changed code that **consumes data from an API** (fetches, reads responses, uses values from backend):
 1. Identify the API endpoint being called (e.g., `/api/v2/inventory/my/data`)
 2. Find the backend repo that serves this endpoint (use workspace AGENTS.md domain mappings)
@@ -345,6 +347,13 @@ For any changed code that **consumes data from an API** (fetches, reads response
 **STYLE changes:** Check convention consistency, verify no hidden logic changes.
 
 **REFACTOR changes:** Verify behavior preservation, check all usages still work.
+
+**Domain-Specific Checklists**: Based on the file types in the PR, read the relevant checklist for domain-specific review criteria:
+- Vue/Nuxt frontend files → [frontend-vue-nuxt.md](checklists/frontend-vue-nuxt.md)
+- Express/Node backend → [backend-express.md](checklists/backend-express.md)
+- Database migrations/queries → [database.md](checklists/database.md)
+- CI/CD configs → [ci-cd.md](checklists/ci-cd.md)
+- Consumer search patterns → [consumer-search-matrix.md](checklists/consumer-search-matrix.md)
 
 **Checkpoint:** Save results to `.checkpoints/phase-2-tracing.json` (tracing results per file, callers/callees, test coverage, data flow, premise check answers, cross-repo tracing) and update `manifest.json` (`completed_phase: 2`, `next_phase: 2.5`).
 
@@ -361,11 +370,11 @@ Before launching subagents, generate a GitHub Copilot-style PR summary. Reviewer
 
 **Checkpoint:** Save results to `.checkpoints/phase-2.5-summary.json` (PR summary text, key changes, file summaries) and update `manifest.json` (`completed_phase: 2.5`, `next_phase: 3`).
 
-### Phase 3: Parallel Subagent Execution (NEVER SKIP)
+### Phase 3: Parallel Subagent Execution
 
-**ALL 4 subagents MUST run for EVERY review. No exceptions. No "this PR is too small." No "this is just a deletion." The phases exist because each subagent catches different classes of issues that you, the orchestrator, will miss.**
+Launch all 4 subagents simultaneously with `run_in_background: true`. Each agent catches issues the others miss — the quality agent finds duplication the security agent ignores, the librarian catches framework anti-patterns the integration agent overlooks. Include PR Summary, nano-brain memory, Premise Check results (if DELETION), cross-repo tracing results, `$REVIEW_DIR` path, and `$FRAMEWORK_RULES` (from Phase -2) in each prompt.
 
-Launch ALL 4 subagents simultaneously with `run_in_background: true`. Include PR Summary, nano-brain memory, Premise Check results (if DELETION), cross-repo tracing results, and **`$REVIEW_DIR` path** in each prompt so subagents read from the correct clone.
+Read `references/subagent-prompts.md` now for the full prompt templates.
 
 | # | Agent | Type | Focus |
 |---|-------|------|-------|
@@ -392,7 +401,7 @@ New fields (v3.1): `evidence` (REQUIRED for critical/warning — concrete proof 
    - `consensus_count >= 2` → boost confidence to `high` (multiple agents agree)
    - `consensus_count == 1` + non-empty `evidence` with file:line references → keep original severity and confidence
    - `consensus_count == 1` + empty/missing `evidence` + severity `critical` or `warning` → **AUTO-DOWNGRADE to `suggestion`**
-3. **Severity Filter** (CRITICAL — this makes reports short):
+3. **Severity Filter** (keeps reports short):
    - `critical` + `warning` → **KEEP with full detail**
    - `improvement` → **KEEP as one-liner** with optional code suggestion
    - `suggestion` → **COUNT only** — report total number, omit individual details unless < 3 total
@@ -405,44 +414,33 @@ New fields (v3.1): `evidence` (REQUIRED for critical/warning — concrete proof 
 
 ### Phase 4.5: Orchestrator Verification Spot-Check (Critical + Warning Only)
 
-The orchestrator MUST verify each finding with severity `critical` or `warning` by reading the actual code at the cited evidence locations in `$REVIEW_DIR`. This catches false positives that survived subagent self-verification.
+Verify each critical/warning finding by reading the actual code at cited evidence locations. This catches false positives that survived subagent self-verification.
 
-**If no critical/warning findings exist after Phase 4:** Skip Phase 4.5 (mark as complete immediately, proceed to Phase 5).
+If no critical/warning findings exist after Phase 4, skip to Phase 4.6.
 
-**For each critical/warning finding:**
+**Full protocol**: [verification-protocol.md](references/verification-protocol.md) — category-specific verification rules, timeout policy, checkpoint schema.
 
-1. **Parse the evidence field** — extract file:line references cited by the subagent
-2. **Read the cited files** from `$REVIEW_DIR` at the referenced line numbers
-3. **Verify the claim** based on finding category:
-   - **Error handling claims**: Read the controller/route handler that calls this code path. If a try-catch exists at the HTTP boundary → finding is FALSE
-   - **Null safety claims**: Read the data source (SQL query, API contract). If the source guarantees non-null (PK, NOT NULL, JOIN constraint) → finding is FALSE
-   - **Logic error claims**: Trace the cited execution path. If no realistic input triggers the bug → finding is FALSE
-   - **Framework pattern claims**: Check if the specific usage context makes the pattern safe → finding is FALSE
-4. **Mark verification status**:
-   - `verified: true` — evidence checks out, issue is real → **KEEP** in report
-   - `verified: false` — evidence is wrong (e.g., try-catch DOES exist) → **DROP** from report
-   - `verified: "unverifiable"` — can't confirm within timeout → **DOWNGRADE** to `suggestion`
+**Checkpoint:** Save to `.checkpoints/phase-4.5-verification.json`. Update manifest (`completed_phase: 4.5`, `next_phase: 4.6`).
 
-**Timeout**: 30 seconds per finding. If verification takes longer, mark as `unverifiable` and move on.
+### Phase 4.6: Result Confidence Assessment
 
-**Checkpoint:** Save results to `.checkpoints/phase-4.5-verification.json`:
-```json
-{
-  "findings_checked": 5,
-  "verified_true": 3,
-  "verified_false": 1,
-  "unverifiable": 1,
-  "dropped_findings": [{ "original": { "file": "...", "line": 42, "message": "..." }, "reason": "try-catch exists at controller.js:28" }],
-  "downgraded_findings": [{ "original": { "file": "...", "line": 99, "message": "..." }, "new_severity": "suggestion" }]
-}
-```
-Update `manifest.json` (`completed_phase: 4.5`, `next_phase: 5`).
+Score how confident we are in the review's findings — are they correct and complete? Computed from accuracy rate (40%), consensus rate (30%), and evidence rate (30%).
+
+| Score | Label | Gate Action |
+|-------|-------|-------------|
+| 80–100 | 🟢 High | Proceed normally |
+| 60–79 | 🟡 Medium | Add warning: "Some findings may be inaccurate" |
+| < 60 | 🔴 Low | Add warning: "Low confidence — manual review recommended" |
+
+**Full scoring details**: [confidence-scoring.md](references/confidence-scoring.md) — formula, per-finding confidence levels, special cases, checkpoint schema.
+
+**Checkpoint:** Save to `.checkpoints/phase-4.6-confidence.json`. Update manifest (`completed_phase: 4.6`, `next_phase: 5`).
 
 ### Phase 5: Report Generation
 Save to `.opencode/reviews/{type}_{identifier}_{date}.md`. Create directory if needed.
 
 **Report structure** (compact — omit empty sections):
-1. **TL;DR** — verdict (APPROVE/REQUEST CHANGES/COMMENT) + issue counts in 3 lines
+1. **TL;DR** — verdict (APPROVE/REQUEST CHANGES/COMMENT) + issue counts + Result Confidence score from Phase 4.6
 2. **PR Overview** — what this PR does (1-3 sentences) + key changes by category
 3. **Ticket Alignment** — acceptance criteria coverage check (only if Linear ticket found). Flag ambiguous criteria.
 4. **Premise Check** — only for DELETION changes: why the code existed, whether removal is correct vs fixing the logic, cross-repo implications
@@ -466,9 +464,9 @@ Save key findings for future sessions. Includes PR number, title, date, files, c
 
 **Checkpoint:** Update `manifest.json` (`completed_phase: 5.5`, `next_phase: 6`).
 
-### Phase 6: Cleanup (MANDATORY for PR Reviews)
+### Phase 6: Cleanup (PR Reviews Only)
 
-**NEVER delete the temp folder without asking the user.** The user may want to inspect files, run tests, or review multiple PRs.
+Always ask before deleting the temp folder — the user may want to inspect files, run tests, or review multiple PRs.
 
 1. **Show the temp folder path and size**:
    ```bash
@@ -495,7 +493,7 @@ Save key findings for future sessions. Includes PR number, title, date, files, c
 
 **Note:** Checkpoints are automatically removed when the clone directory is deleted. For local reviews (`--staged`), checkpoints remain in `.checkpoints/` until manually deleted.
 
-### User Notification (CRITICAL)
+### User Notification
 
 After review completes, ALWAYS inform the user:
 
@@ -524,7 +522,16 @@ Summary:
 
 | Document | Content | When to Read |
 |----------|---------|--------------|
+| [setup-wizard.md](references/setup-wizard.md) | Stack setup wizard — questions, mapping, config schema | Phase -2 (first run) |
 | [subagent-prompts.md](references/subagent-prompts.md) | Full prompt templates for all 4 subagents | Phase 3 execution |
 | [report-template.md](references/report-template.md) | Report format, PR summary guidelines, pseudocode | Phase 2.5 + Phase 5 |
 | [nano-brain-integration.md](references/nano-brain-integration.md) | Tool reference, query patterns, save patterns | Phase 1, 2, 5.5 |
-| [config.json](assets/config.json) | Full workspace + output + trace config | Setup |
+| [config.json](assets/config.json) | Full workspace + output + trace + stack config | Setup |
+| [security-patterns.md](references/security-patterns.md) | OWASP patterns, auth checks | Phase 3 (Security agent) |
+| [quality-patterns.md](references/quality-patterns.md) | Code quality anti-patterns | Phase 3 (Quality agent) |
+| [performance-patterns.md](references/performance-patterns.md) | N+1, caching, allocation patterns | Phase 3 (Integration agent) |
+| [framework-rules/](references/framework-rules/) | vue-nuxt, express, nestjs, typeorm, typescript, nextjs, react, prisma | Phase -2 (load only stack-matching files) |
+| [checkpoint-system.md](references/checkpoint-system.md) | Manifest schema, checkpoint files, resume logic | Phase -1 (resume detection) |
+| [verification-protocol.md](references/verification-protocol.md) | Category-specific verification rules | Phase 4.5 |
+| [confidence-scoring.md](references/confidence-scoring.md) | Confidence formula, thresholds, display format | Phase 4.6 |
+| [checklists/database.md](checklists/database.md) | MySQL/Redis patterns, transactions, migrations | Phase 2 (DB file changes) |

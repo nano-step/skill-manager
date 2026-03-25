@@ -16,8 +16,8 @@
   },
   {
     "name": "pr-code-reviewer",
-    "version": "7.1.0",
-    "description": "PR review with MANDATORY cross-repo consumer search, nano-brain code intelligence, and better-context structural analysis. READ-ONLY — no comments, pushes, or code fixes."
+    "version": "3.3.0",
+    "description": "PR review with 4 parallel subagents, stack-aware setup wizard (Nuxt/Next/React/Express/NestJS/TypeORM/Prisma), AGENTS.md knowledge base integration, cross-repo tracing, verification pipeline, and confidence scoring. READ-ONLY — no comments, pushes, or code fixes."
   },
   {
     "name": "deep-design",
