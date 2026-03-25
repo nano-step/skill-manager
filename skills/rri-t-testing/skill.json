@@ -1,9 +1,0 @@
-{
-  "name": "rri-t-testing",
-  "version": "2.0.0",
-  "description": "RRI-T v2: Rapid Risk-Informed Testing with BMAD-enhanced risk scoring, traceability, quality gates, and nano-brain memory persistence",
-  "compatibility": "OpenCode",
-  "agent": null,
-  "commands": [],
-  "tags": ["testing", "qa", "rri-t", "release-gates", "test-cases", "risk-scoring", "traceability", "bmad", "nano-brain"]
-}
