@@ -16,8 +16,8 @@
   },
   {
     "name": "pr-code-reviewer",
-    "version": "3.3.0",
-    "description": "PR review with 4 parallel subagents, stack-aware setup wizard (Nuxt/Next/React/Express/NestJS/TypeORM/Prisma), AGENTS.md knowledge base integration, cross-repo tracing, verification pipeline, and confidence scoring. READ-ONLY — no comments, pushes, or code fixes."
+    "version": "3.4.0",
+    "description": "PR review with 4 parallel subagents, stack-aware setup wizard (Nuxt/Next/React/Express/NestJS/TypeORM/Prisma), AGENTS.md knowledge base integration, cross-repo tracing, verification pipeline, confidence scoring, and git worktree checkout (no /tmp clones). READ-ONLY — no comments, pushes, or code fixes."
   },
   {
     "name": "deep-design",
@@ -26,7 +26,7 @@
   },
   {
     "name": "rri-t-testing",
-    "version": "1.0.0",
-    "description": "RRI-T QA methodology — 5-phase testing with 7 dimensions, 5 personas, and release gates"
+    "version": "1.1.0",
+    "description": "RRI-T QA methodology — 5-phase testing with 7 dimensions, 5 personas, release gates, Vietnamese-specific testing (13 cases), performance budgets, security checklist (8 areas), and dimension checklists (D5/D6)"
   }
 ]
