@@ -21,8 +21,8 @@
   },
   {
     "name": "deep-design",
-    "version": "1.0.0",
-    "description": "Multi-agent planning pipeline: Metis + Oracle → Synthesis → OpenSpec → Momus review"
+    "version": "2.0.0",
+    "description": "Multi-agent planning pipeline with LLM Council patterns: Metis + Oracle → Cross-Critique → Confidence-scored Synthesis → Momus Sanity Check → OpenSpec → Full Momus Review. Graceful degradation on agent failure."
   },
   {
     "name": "rri-t-testing",
