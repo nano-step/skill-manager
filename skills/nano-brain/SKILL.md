@@ -24,93 +24,85 @@ Provide persistent memory for AI coding agents. Run hybrid search (BM25 + semant
 **Before work:** Recall past decisions, patterns, debugging insights, cross-session context.
 **After work:** Save key decisions, architecture choices, non-obvious fixes, domain knowledge.
 
-## Access Methods: MCP vs CLI
+## Commands
 
-Access nano-brain via **MCP tools** (when the MCP server is configured) or **CLI** (always available).
+Use the nano-brain CLI for all memory and code intelligence operations.
 
-**Detection:** Try calling `memory_status` MCP tool first. If it fails with "MCP server not found", fall back to CLI.
+- **`npx nano-brain search "..."`** — recall a specific error string or function name from past sessions.
+  Example: `npx nano-brain search "ECONNREFUSED redis timeout"`
+  Compact mode: `npx nano-brain search "..." --compact` — returns 1-line summaries, ~70% fewer tokens
+- **`npx nano-brain vsearch "..."`** — explore a fuzzy concept when you do not know the exact wording.
+  Example: `npx nano-brain vsearch "caching strategy for user sessions"`
+  Compact mode: `npx nano-brain vsearch "..." --compact`
+- **`npx nano-brain query "..."`** — get the best hybrid answer for a complex, multi-part question.
+  Example: `npx nano-brain query "how did we handle rate limiting in the payment service"`
+  Compact mode: `npx nano-brain query "..." --compact`
+- **`npx nano-brain write "..." --tags=...`** — log a decision or insight for future recall.
+  Example: `npx nano-brain write "## Decision: Use Redis Streams over Bull queues\n- Why: retries need ordered replay" --tags=decision`
+- **`npx nano-brain status`** — verify health or embedding progress before searching.
+  Example: `npx nano-brain status`
+- **`npx nano-brain reindex`** — refresh all indexes after big changes or repo syncs. **ALWAYS use `workdir` parameter** — `--root` flag is silently ignored and reindexes CWD instead.
+  ✅ Correct: `bash(command="npx nano-brain reindex", workdir="/path/to/workspace")`
+  ❌ Wrong: `npx nano-brain reindex --root=/path/to/workspace`
+- **`npx nano-brain focus <filepath>`** — inspect dependencies for a specific file you are editing.
+  Example: `npx nano-brain focus /src/api/routes/auth.ts`
+- **`npx nano-brain graph-stats`** — check dependency graph size and coverage.
+  Example: `npx nano-brain graph-stats`
+- **`npx nano-brain symbols --type=... --pattern=...`** — find where cross-repo infrastructure symbols are defined or used.
+  Example: `npx nano-brain symbols --type=redis_key --pattern="session:*"`
+- **`npx nano-brain impact --type=... --pattern=...`** — see which repos or services are affected by a symbol.
+  Example: `npx nano-brain impact --type=mysql_table --pattern=orders`
+- **`npx nano-brain tags`** — list all tags to see what is tracked.
+  Example: `npx nano-brain tags`
 
-### MCP Tools (preferred when available)
+## Token-Saving: Compact Search Flow (CCR)
 
-- **`memory_search`** — recall a specific error string or function name from past sessions.
-  Example: `skill_mcp(mcp_name="nano-brain", tool_name="memory_search", arguments={ query: "ECONNREFUSED redis timeout" })`
-- **`memory_vsearch`** — explore a fuzzy concept when you do not know the exact wording.
-  Example: `memory_vsearch("caching strategy for user sessions")`
-- **`memory_query`** — get the best hybrid answer for a complex, multi-part question.
-  Example: `memory_query("how did we handle rate limiting in the payment service")`
-- **`memory_get`** — pull one known doc by ID or path.
-  Example: `memory_get(id="#a1b2c3")`
-- **`memory_multi_get`** — fetch a set of known docs by pattern.
-  Example: `memory_multi_get(pattern="decisions/2025-*/auth-*.md")`
-- **`memory_write`** — log a decision or insight for future recall.
-  Example: `memory_write("## Decision: Use Redis Streams over Bull queues\n- Why: retries need ordered replay")`
-- **`memory_set`** — store a keyed note you plan to update over time.
-  Example: `memory_set(key="payments-rate-limit", content="429s come from gateway, not nginx")`
-- **`memory_delete`** — remove a stale keyed note that is no longer accurate.
-  Example: `memory_delete(key="legacy-redis-metrics")`
-- **`memory_keys`** — list all keyed notes to see what is tracked.
-  Example: `memory_keys()`
-- **`memory_status`** — verify MCP health or embedding progress before searching.
-  Example: `memory_status()`
-- **`memory_index_codebase`** — index source files before using code intelligence tools.
-  Example: `memory_index_codebase(root="/Users/tamlh/workspaces/self/AI/Tools")`
-- **`memory_update`** — refresh all indexes after big changes or repo syncs.
-  Example: `memory_update()`
-- **`memory_focus`** — inspect dependencies for a specific file you are editing.
-  Example: `memory_focus(filePath="/src/api/routes/auth.ts")`
-- **`memory_graph_stats`** — check dependency graph size and coverage.
-  Example: `memory_graph_stats()`
-- **`memory_symbols`** — find where cross-repo infrastructure symbols are defined or used.
-  Example: `memory_symbols(type="redis_key", pattern="session:*")`
-- **`memory_impact`** — see which repos or services are affected by a symbol.
-  Example: `memory_impact(type="mysql_table", pattern="orders")`
+For large result sets, use **compact mode** to save ~70% tokens. Compact returns 1-line summaries per result; expand the ones you need.
 
-### CLI Fallback (always available)
+**CLI flow:**
+```bash
+npx nano-brain query "auth middleware" --compact
+```
 
-When MCP server is not available, use the CLI via Bash tool:
+**When to use compact:**
+- Triage/scanning many results before reading details
+- Context window is tight and you need to be selective
+- Searching broad topics where most results won't be relevant
 
-| Need | CLI Command |
-|------|-------------|
-| Best quality search (hybrid: BM25 + vector + reranking) | `npx nano-brain query "search terms"` |
-| Search with collection filter | `npx nano-brain query "terms" -c codebase` |
-| Search with more/fewer results | `npx nano-brain query "terms" -n 20` |
-| Show full content of results | `npx nano-brain query "terms" --full` |
-| Check health & stats | `npx nano-brain status` |
-| Initialize workspace | `npx nano-brain init --root=/path/to/workspace` |
-| Generate embeddings | `npx nano-brain embed` |
-| Harvest sessions | `npx nano-brain harvest` |
-| List collections | `npx nano-brain collection list` |
-
-**CLI limitations vs MCP:**
-- CLI only has `query` (unified hybrid search) — no separate `search` (BM25-only) or `vsearch` (vector-only)
-- CLI cannot `write` notes — use MCP or manually create files in `~/.nano-brain/memory/`
-- CLI cannot `get` specific docs by ID — use `query` with specific terms instead
-
-**Default:** Use `npx nano-brain query "..."` — it combines BM25 + vector + reranking for best results.
+**When to use verbose (default):**
+- You need full content from all results
+- Small result sets (< 5 results)
+- Precise queries where every result matters
 
 ## Collection Filtering
 
-Works with both MCP and CLI (`-c` flag):
+Works with CLI (`-c` flag):
 
 - `codebase` — source files only
 - `sessions` — past AI sessions only
 - `memory` — curated notes only
 - Omit — search everything (recommended)
 
-## Code Intelligence Tools (MCP)
+## Code Intelligence Tools (CLI)
 
 Use symbol-level analysis powered by Tree-sitter AST parsing. Require codebase indexing.
 
-- **`code_context`** — trace callers, callees, and flows around a symbol.
-  Example: `code_context(name="processPayment")`
-- **`code_impact`** — evaluate upstream or downstream risk before refactors.
-  Example: `code_impact(target="DatabaseClient", direction="upstream")`
-- **`code_detect_changes`** — map current git diffs to symbols and flows.
-  Example: `code_detect_changes(scope="all")`
+- **`npx nano-brain context <name>`** — trace callers, callees, and flows around a symbol.
+  Example: `npx nano-brain context processPayment`
+- **`npx nano-brain code-impact <name> --direction=...`** — evaluate upstream or downstream risk before refactors.
+  Example: `npx nano-brain code-impact DatabaseClient --direction=upstream`
+- **`npx nano-brain detect-changes --scope=...`** — map current git diffs to symbols and flows.
+  Example: `npx nano-brain detect-changes --scope=all`
 
 **Details and examples:** `references/code-intelligence.md`
 
 ## Memory vs Native Tools
+
+| Use case | Tool |
+|----------|------|
+| Recall past decisions or context | `npx nano-brain query "..."` |
+| Find exact strings or patterns in code | grep / ast-grep |
+| Trace callers/callees or impact | `npx nano-brain context <name>` / `npx nano-brain code-impact <name> --direction=...` |
 
 Memory excels at **recall and semantics** — past sessions, conceptual search, cross-project knowledge.
 Native tools (grep, ast-grep, glob) excel at **precise code patterns** — exact matches, AST structure.

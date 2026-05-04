@@ -1,6 +1,6 @@
 {
     "name": "nano-brain",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "description": "Persistent memory and code intelligence for AI coding agents. Hybrid search, cross-session recall, symbol analysis, and impact checks.",
     "compatibility": "OpenCode",
     "agent": null,
