@@ -28,5 +28,10 @@
     "name": "rri-t-testing",
     "version": "1.1.0",
     "description": "RRI-T QA methodology — 5-phase testing with 7 dimensions, 5 personas, release gates, Vietnamese-specific testing (13 cases), performance budgets, security checklist (8 areas), and dimension checklists (D5/D6)"
+  },
+  {
+    "name": "enhance-prompt",
+    "version": "1.0.0",
+    "description": "Use when the user wants to rewrite, improve, refine, or enhance a prompt before sending it to an LLM. Triggers on phrases like \"enhance this prompt\", \"improve this prompt\", \"rewrite as a better prompt\", or \"/enhance-prompt\"."
   }
 ]

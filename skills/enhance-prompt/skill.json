@@ -1,0 +1,9 @@
+{
+  "name": "enhance-prompt",
+  "version": "1.0.0",
+  "description": "Use when the user wants to rewrite, improve, refine, or enhance a prompt before sending it to an LLM. Triggers on phrases like \"enhance this prompt\", \"improve this prompt\", \"rewrite as a better prompt\", or \"/enhance-prompt\".",
+  "compatibility": "OpenCode",
+  "agent": null,
+  "commands": [],
+  "tags": ["prompt-engineering", "prompt", "rewrite", "enhance"]
+}
