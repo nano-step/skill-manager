@@ -1,0 +1,40 @@
+# sync-skill-to-manager scripts
+
+Helper scripts invoked by the skill orchestrator. Each script does one thing and exits with a clear non-zero status on failure.
+
+| Script | Purpose | Usage |
+|---|---|---|
+| `sync.sh` | Main orchestrator. Coordinates the others. | `sync.sh <skill-name> [flags]` |
+| `preflight.sh` | All pre-flight checks (paths, auth, leak scan, git state). | `preflight.sh <skill-name> [--no-publish]` |
+| `version-bump.sh` | Patch-bump version in `skill.json` + `SKILL.md` frontmatter. | `version-bump.sh <skill-json> <skill-md>` |
+| `commit.sh` | Conventional-commit wrapper that disables AI/co-author trailers. | `commit.sh <repo> <message> [<file>...]` |
+
+## Flags supported by `sync.sh`
+
+| Flag | Effect |
+|---|---|
+| `--dry-run` | Print the plan and exit. No writes. |
+| `--no-push` | Commit locally only. Implies `--no-publish` would also skip npm. |
+| `--no-publish` | Commit + push but skip npm. |
+| `--force` | Bypass dirty-state checks. |
+| `--source <path>` | Override source skill path. |
+| `--classify public\|private` | Override classification (required for brand-new skills). |
+| `--remove-leak` | Required when syncing a private skill that has a leaked copy in `skill-manager/skills/`. Removes the leaked copy as part of the commit. |
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Operational failure (build error, push fail, dirty repo, etc.) |
+| 2 | Argument error |
+| 3 | Ambiguous source (skill exists in both project and global) — caller must pass `--source` |
+
+## Hard-coded paths
+
+These scripts are opinionated about where the repos live. Edit the constants at the top of each script if your layout differs.
+
+```
+SKILL_MANAGER_REPO=/Users/tamlh/workspaces/self/AI/Tools/skill-manager
+PRIVATE_SKILLS_REPO=/Users/tamlh/workspaces/self/AI/Tools/private-skills
+```
