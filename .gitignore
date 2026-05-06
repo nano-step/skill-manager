@@ -2,3 +2,4 @@ node_modules/
 .opencode/
 .sisyphus/
 openspec/
+.claude/
