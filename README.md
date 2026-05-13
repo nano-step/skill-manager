@@ -52,11 +52,12 @@ npx @nano-step/skill-manager install --all
 
 | Skill | Description |
 |-------|-------------|
+| `blackbox-testing` | Autonomous black box testing for ANY running web app — OWASP pentest depth, no PRD required |
+| `database-inspector` | Database schema inspection for MySQL and PostgreSQL with progressive discovery |
 | `e2e-test-generator` | E2E test generation from PRD using Playwright MCP |
 | `feature-analysis` | Deep code analysis with execution tracing and gap analysis |
 | `pr-code-reviewer` | Comprehensive PR code review with 4 parallel subagents |
 | `rri-t-testing` | RRI-T QA methodology — 5-phase testing with 7 dimensions and release gates |
-| `database-inspector` | Database schema inspection for MySQL and PostgreSQL with progressive discovery |
 ## What Gets Installed
 
 When you install a skill, the manager:
