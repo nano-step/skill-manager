@@ -1,13 +1,13 @@
 ---
 name: od-media-prompts
-description: This skill should be used when the user wants to generate posters, illustrations, infographics, cinematic videos, motion graphics, product reveals, kinetic typography, or any text-to-image/video output. Provides 103 battle-tested prompt templates with thumbnail provenance to adapt rather than write from scratch.
+description: This skill should be used when the user wants to generate posters, illustrations, infographics, cinematic videos, motion graphics, product reveals, kinetic typography, or any text-to-image/video output. Provides 102 battle-tested prompt templates with thumbnail provenance to adapt rather than write from scratch.
 license: Apache-2.0
 version: 1.0.0
 ---
 
 # Open Design — Media Prompts Library
 
-103 production-grade prompts for image and video generation, vendored from [nexu-io/open-design](https://github.com/nexu-io/open-design). Each is a JSON spec with title, description, prompt body, model hints, and example outputs — battle-tested with thumbnails in the upstream Open Design app.
+102 production-grade prompts for image and video generation, vendored from [nexu-io/open-design](https://github.com/nexu-io/open-design). Each is a JSON spec with title, description, prompt body, model hints, and example outputs — battle-tested with thumbnails in the upstream Open Design app.
 
 ## Library location
 
@@ -15,7 +15,7 @@ After install, content lives at: `{config}/skills/od-media-prompts/assets/prompt
 
 ```
 prompt-templates/
-├── image/   # 46 JSON files — gpt-image-2 / Imagen / fal.ai prompts
+├── image/   # 45 JSON files — gpt-image-2 / Imagen / fal.ai prompts
 └── video/   # 57 JSON files — Seedance 2.0 / HyperFrames / Sora prompts
 ```
 

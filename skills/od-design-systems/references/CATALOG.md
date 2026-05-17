@@ -1,4 +1,4 @@
-# Design Systems Catalog — 151 systems
+# Design Systems Catalog — 149 systems
 
 Full curated catalog of all design systems in `assets/design-systems/`. Pick ONE per artifact.
 

@@ -7,7 +7,7 @@ version: 1.0.0
 
 # Open Design — Design Systems Library
 
-151 brand-grade design systems vendored from [nexu-io/open-design](https://github.com/nexu-io/open-design). Each is a complete `DESIGN.md` with palette hex codes, font stacks, component stylings, layout principles, depth/elevation rules, do's/don'ts, responsive behavior, and an agent prompt guide.
+149 brand-grade design systems vendored from [nexu-io/open-design](https://github.com/nexu-io/open-design). Each is a complete `DESIGN.md` with palette hex codes, font stacks, component stylings, layout principles, depth/elevation rules, do's/don'ts, responsive behavior, and an agent prompt guide.
 
 ## Library location
 

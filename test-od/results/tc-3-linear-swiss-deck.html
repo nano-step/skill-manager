@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<!--
+  TC-3 · Sprint 80 · Tournaments Ship
+  Template: deck-swiss-international (od-decks)
+  Design system: linear-app (od-design-systems)
+  Layouts used: S01 Cover · S06 KPI Tower · S11 Horizontal Timeline · S03 Statement · S18 Why Now
+  Palette: ONLY Linear hex tokens — #08090a #0f1011 #191a1b #5e6ad2 #7170ff #f7f8f8 #d0d6e0 #8a8f98 #62666d #23252a #10b981
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Sprint 80 · Tournaments Ship — WIN-6884</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #08090a;  /* Marketing Black */
+    --panel:     #0f1011;  /* Panel Dark */
+    --surface:   #191a1b;  /* Level 3 Surface */
+    --ink:       #f7f8f8;  /* Primary Text */
+    --body:      #d0d6e0;  /* Secondary Text */
+    --muted:     #8a8f98;  /* Tertiary Text */
+    --subtle:    #62666d;  /* Quaternary Text */
+    --accent:    #5e6ad2;  /* Brand Indigo */
+    --accent2:   #7170ff;  /* Accent Violet */
+    --emerald:   #10b981;  /* Status */
+    --border-s:  #23252a;  /* Border Primary */
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Inter', SF Pro Display, -apple-system, system-ui, sans-serif;
+    font-feature-settings: "cv01","ss03";
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, SF Mono, Menlo, monospace; }
+
+  /* Deck stage — single slide at a time, ← / → navigation */
+  .stage {
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .slide {
+    width: min(1280px, 96vw);
+    aspect-ratio: 16/9;
+    position: relative;
+    background: var(--bg);
+    color: var(--ink);
+    display: none;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 0; /* Swiss: only right angles */
+    overflow: hidden;
+  }
+  .slide.active { display: block; }
+
+  /* Swiss chrome — fixed header / footer per slide */
+  .chrome {
+    position: absolute; left: 0; right: 0;
+    padding: 24px 48px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .chrome.top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .chrome.bot { bottom: 0; border-top: 1px solid rgba(255,255,255,0.05); }
+  .chrome span.accent { color: var(--accent2); }
+
+  /* Body region inside chrome */
+  .frame {
+    position: absolute; inset: 72px 48px 64px 48px;
+    display: flex; flex-direction: column;
+  }
+
+  /* Display type — Linear typography rules */
+  h1.display-xl {
+    font-size: clamp(56px, 7.2vw, 96px);
+    font-weight: 510;
+    line-height: 1.00;
+    letter-spacing: -0.022em;
+    margin: 0;
+    color: var(--ink);
+  }
+  h2.display-l {
+    font-size: clamp(40px, 4.6vw, 72px);
+    font-weight: 510;
+    line-height: 1.00;
+    letter-spacing: -0.018em;
+    margin: 0;
+    color: var(--ink);
+  }
+  h3.heading {
+    font-size: 20px; font-weight: 590;
+    line-height: 1.33; letter-spacing: -0.012em;
+    margin: 0; color: var(--ink);
+  }
+  .body-l { font-size: 18px; font-weight: 400; line-height: 1.60; letter-spacing: -0.0092px; color: var(--body); }
+  .body   { font-size: 16px; font-weight: 400; line-height: 1.50; color: var(--body); }
+  .small  { font-size: 14px; font-weight: 510; line-height: 1.50; color: var(--muted); }
+  .label  { font-size: 11px; font-weight: 510; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent2); font-family: 'JetBrains Mono', monospace; }
+
+  /* ASCII dot field (Swiss S01 signature) — rendered with mono opacity */
+  .ascii {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; line-height: 1; letter-spacing: 6px;
+    color: var(--accent);
+    opacity: 0.22;
+    white-space: pre;
+    user-select: none;
+  }
+
+  /* S06 KPI Tower bars */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; align-items: end; }
+  .kpi { text-align: left; }
+  .kpi .bar {
+    width: 100%;
+    background: var(--accent);
+    border-top: 1px solid var(--accent2);
+  }
+  .kpi .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 500; line-height: 1; color: var(--ink);
+    margin-top: 16px; letter-spacing: -0.02em;
+  }
+  .kpi .lab {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 10px; padding-top: 10px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* S11 Horizontal Timeline — pipeline */
+  .pipeline {
+    display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr;
+    align-items: center;
+    margin-top: 32px;
+  }
+  .node {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+    padding: 24px;
+    min-height: 180px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .node .step {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent2);
+  }
+  .node .name {
+    font-size: 24px; font-weight: 510; letter-spacing: -0.012em;
+    color: var(--ink); margin-top: 8px;
+  }
+  .node .desc {
+    font-size: 14px; color: var(--muted); line-height: 1.5; margin-top: 12px;
+  }
+  .arrow {
+    height: 1px; background: var(--accent);
+    position: relative;
+  }
+  .arrow::after {
+    content: ""; position: absolute; right: -1px; top: -4px;
+    border-left: 8px solid var(--accent);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  /* S03 Statement — big quote */
+  .quote-wrap { display: grid; grid-template-columns: 1fr 2fr; gap: 64px; height: 100%; align-items: center; }
+  .quote-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent2);
+  }
+  .quote {
+    font-size: clamp(28px, 3.4vw, 48px);
+    font-weight: 510; line-height: 1.15; letter-spacing: -0.018em;
+    color: var(--ink);
+  }
+  .quote em { color: var(--accent2); font-style: normal; }
+  .quote-byline { margin-top: 32px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 0;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent2);
+  }
+
+  /* S18 Why Now — 3 columns, last accent */
+  .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; height: 100%; }
+  .col {
+    padding: 32px;
+    border-left: 1px solid rgba(255,255,255,0.05);
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .col:first-child { border-left: 0; }
+  .col.accent { background: var(--accent); color: var(--ink); }
+  .col.accent .small,
+  .col.accent .body { color: rgba(247,248,248,0.85); }
+  .col.accent .label { color: var(--ink); }
+  .col .cat {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .col h3 { margin-top: 12px; font-size: 28px; font-weight: 510; line-height: 1.1; letter-spacing: -0.014em; color: inherit; }
+  .col p  { margin-top: 16px; font-size: 15px; line-height: 1.5; color: var(--muted); }
+  .col.accent p { color: rgba(247,248,248,0.88); }
+  .col .num-foot {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(40px, 4.2vw, 64px); font-weight: 500;
+    letter-spacing: -0.02em; color: var(--ink);
+  }
+  .col .num-foot small { display:block; font-size: 11px; letter-spacing:0.16em; text-transform:uppercase; color: var(--muted); margin-top: 6px; font-weight: 510; }
+  .col.accent .num-foot small { color: rgba(247,248,248,0.75); }
+
+  /* S01 Cover-specific */
+  .cover-body { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+  .meta-line {
+    display: flex; gap: 24px; align-items: baseline;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  }
+  .meta-line .dot { width: 6px; height: 6px; background: var(--accent2); display: inline-block; }
+  .cover-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent2);
+  }
+  .cover-sub { max-width: 720px; margin-top: 24px; }
+
+  /* Navigation hint */
+  .navhint {
+    position: fixed; bottom: 16px; right: 24px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--subtle);
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+    padding: 6px 12px;
+  }
+  .navhint kbd { color: var(--accent2); font-family: inherit; }
+
+  /* Counter */
+  .counter {
+    position: fixed; bottom: 16px; left: 24px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--subtle);
+  }
+  .counter b { color: var(--ink); font-weight: 510; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- =========================================================
+       S1 · S01 Cover — Hero
+       ========================================================= -->
+  <section class="slide active" data-slide="1">
+    <div class="chrome top">
+      <span>PLAYSWEEPS — SPRINT 80 DEMO</span>
+      <span class="accent">WIN-6884</span>
+      <span>2026.05.17</span>
+    </div>
+
+    <pre class="ascii" style="position:absolute; top:96px; right:48px;">
+░ ░ ░ ▒ ▒ ▒ ▓ ▓ ▓ █ █ █
+░ ░ ▒ ▒ ▒ ▓ ▓ ▓ █ █ █ ▓
+░ ▒ ▒ ▒ ▓ ▓ ▓ █ █ █ ▓ ▒
+▒ ▒ ▒ ▓ ▓ ▓ █ █ █ ▓ ▒ ░
+▒ ▒ ▓ ▓ ▓ █ █ █ ▓ ▒ ░ ░
+▒ ▓ ▓ ▓ █ █ █ ▓ ▒ ░ ░ ░</pre>
+
+    <div class="frame cover-body">
+      <div>
+        <div class="cover-tag">№01 · SPRINT 80 / POD 1 / TOURNAMENTS</div>
+      </div>
+
+      <div>
+        <h1 class="display-xl">
+          Sprint 80<span style="color:var(--accent2)"> · </span><br/>
+          Tournaments<br/>
+          ship.
+        </h1>
+        <p class="body-l cover-sub">
+          1st Party Tournaments goes live across the playSWEEPS web &amp; mobile stack —
+          API service, leaderboard worker, and player-facing UI shipped end-to-end in 12 days.
+        </p>
+      </div>
+
+      <div class="meta-line">
+        <span><span class="dot"></span>&nbsp; OWNER · VÂN NGUYỄN THỊ THANH</span>
+        <span>POD 1 · TOURNAMENTS + RIVE</span>
+        <span>RELEASE · v1.10</span>
+      </div>
+    </div>
+
+    <div class="chrome bot">
+      <span>PLAYSWEEPS.COM</span>
+      <span>S01 / 05</span>
+      <span>VOL. 80</span>
+    </div>
+  </section>
+
+
+  <!-- =========================================================
+       S2 · S06 KPI Tower — 4 KPIs
+       ========================================================= -->
+  <section class="slide" data-slide="2">
+    <div class="chrome top">
+      <span>KPI TOWER — SPRINT 80 IN NUMBERS</span>
+      <span class="accent">WIN-6884</span>
+      <span>STATUS · SHIPPED</span>
+    </div>
+
+    <div class="frame">
+      <div>
+        <div class="label">№02 · DELIVERY METRICS</div>
+        <h2 class="display-l" style="margin-top:8px;">
+          Four columns,<br/>one shipped feature ——<br/>
+          <span style="color:var(--accent2)">Tournaments,</span> end&#8209;to&#8209;end.
+        </h2>
+      </div>
+
+      <div class="kpi-grid" style="margin-top:auto;">
+        <div class="kpi">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#5e6ad2" stroke-width="1.5"><rect x="3" y="4" width="18" height="16"/><path d="M3 9h18"/><path d="M8 4v16"/></svg>
+          <div class="bar" style="height: 64px; margin-top: 24px;"></div>
+          <div class="num">12</div>
+          <div class="lab">DAYS · SPEC TO PROD</div>
+        </div>
+
+        <div class="kpi">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#5e6ad2" stroke-width="1.5"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7.5 7.5l3 8M16.5 7.5l-3 8"/></svg>
+          <div class="bar" style="height: 96px; margin-top: 24px;"></div>
+          <div class="num">3</div>
+          <div class="lab">PODS · IN PARALLEL</div>
+        </div>
+
+        <div class="kpi">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#5e6ad2" stroke-width="1.5"><path d="M6 3v12a3 3 0 0 0 6 0V6a3 3 0 0 1 6 0v12"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="21" r="0.5" fill="#5e6ad2"/></svg>
+          <div class="bar" style="height: 168px; margin-top: 24px;"></div>
+          <div class="num">47</div>
+          <div class="lab">PRS · MERGED</div>
+        </div>
+
+        <div class="kpi">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#5e6ad2" stroke-width="1.5"><circle cx="12" cy="8" r="3"/><path d="M4 21v-1a6 6 0 0 1 16 0v1"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="6" r="2"/></svg>
+          <div class="bar" style="height: 232px; margin-top: 24px;"></div>
+          <div class="num">1.0<span style="color:var(--accent2)">M+</span></div>
+          <div class="lab">PLAYERS · ELIGIBLE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome bot">
+      <span>SOURCE · JIRA WIN BOARD 600 / GITHUB</span>
+      <span>S02 / 05</span>
+      <span>2026-05-17</span>
+    </div>
+  </section>
+
+
+  <!-- =========================================================
+       S3 · S11 Horizontal Timeline — API → Leaderboard → Player
+       ========================================================= -->
+  <section class="slide" data-slide="3">
+    <div class="chrome top">
+      <span>PIPELINE — TOURNAMENTS DATA FLOW</span>
+      <span class="accent">WIN-6884</span>
+      <span>ARCHITECTURE</span>
+    </div>
+
+    <div class="frame">
+      <div>
+        <div class="label">№03 · END-TO-END</div>
+        <h2 class="display-l" style="margin-top:8px;">
+          API <span style="color:var(--accent2)">→</span> Leaderboard
+          <span style="color:var(--accent2)">→</span> Player.
+        </h2>
+        <p class="body-l" style="margin-top:20px; max-width: 880px;">
+          Three services, one contract. Score events publish to Service Bus, fan out into a Redis-backed
+          leaderboard worker, and stream to the player UI over WebSockets — under 800ms p95 end-to-end.
+        </p>
+      </div>
+
+      <div class="pipeline">
+        <div class="node">
+          <div>
+            <div class="step">STEP 01 · INGEST</div>
+            <div class="name">Tournaments API</div>
+            <div class="desc">
+              .NET 8 endpoint in <span class="mono" style="color:var(--accent2)">Sweeps.Tournaments</span>.
+              Validates score, writes to SQL, publishes <span class="mono" style="color:var(--accent2)">score.recorded</span> to Service Bus.
+            </div>
+          </div>
+          <div class="small mono" style="margin-top:16px; color:var(--subtle);">playsweeps-backend</div>
+        </div>
+
+        <div class="arrow"></div>
+
+        <div class="node">
+          <div>
+            <div class="step">STEP 02 · RANK</div>
+            <div class="name">Leaderboard Worker</div>
+            <div class="desc">
+              Consumes the Service Bus topic, updates a Redis sorted set per tournament,
+              and emits <span class="mono" style="color:var(--accent2)">leaderboard.updated</span> deltas.
+            </div>
+          </div>
+          <div class="small mono" style="margin-top:16px; color:var(--subtle);">Sweeps.Tournaments.Worker</div>
+        </div>
+
+        <div class="arrow"></div>
+
+        <div class="node">
+          <div>
+            <div class="step">STEP 03 · RENDER</div>
+            <div class="name">Player Surface</div>
+            <div class="desc">
+              React 18 + Redux-Saga subscribes via WebSocket, hydrates the Rive-animated
+              leaderboard, and broadcasts to the mobile WebView.
+            </div>
+          </div>
+          <div class="small mono" style="margin-top:16px; color:var(--subtle);">playsweeps-web · mobile</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome bot">
+      <span>SLO · 800MS P95 · 99.9% AVAILABILITY</span>
+      <span>S03 / 05</span>
+      <span>POD 1 OWNER</span>
+    </div>
+  </section>
+
+
+  <!-- =========================================================
+       S4 · S03 Statement — Tech-lead callout / quote
+       ========================================================= -->
+  <section class="slide" data-slide="4">
+    <div class="chrome top">
+      <span>STATEMENT — TECH LEAD CALLOUT</span>
+      <span class="accent">WIN-6884</span>
+      <span>POD 1</span>
+    </div>
+
+    <div class="frame">
+      <div class="quote-wrap">
+        <div>
+          <div class="quote-mark">— QUOTE №04</div>
+          <svg viewBox="0 0 120 120" width="120" height="120" style="margin-top: 24px;" aria-hidden="true">
+            <rect x="0" y="0" width="120" height="120" fill="#0f1011" stroke="#23252a"/>
+            <circle cx="60" cy="48" r="20" fill="none" stroke="#5e6ad2" stroke-width="1.5"/>
+            <path d="M20 110 C 28 80, 92 80, 100 110" fill="none" stroke="#5e6ad2" stroke-width="1.5"/>
+            <line x1="0" y1="120" x2="120" y2="120" stroke="#7170ff" stroke-width="1"/>
+          </svg>
+          <div class="quote-byline">
+            <div class="small" style="color: var(--ink); font-weight: 590;">Vân Nguyễn Thị Thanh</div>
+            <div class="small" style="color: var(--muted); margin-top: 4px;">Tech Lead · Pod 1 · Tournaments + Rive</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="quote">
+            “Tournaments shipped because three pods agreed on <em>one contract first</em>
+            — Service Bus topics, not screens. Once the events were stable,
+            the API, the worker, and the player UI converged in days, not weeks.”
+          </div>
+          <div class="meta-line" style="margin-top: 40px;">
+            <span><span class="dot"></span>&nbsp; SLACK · #pod-1-tournaments</span>
+            <span>SPRINT 80 RETRO · 2026-05-16</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome bot">
+      <span>SOURCE · INTERNAL RETRO</span>
+      <span>S04 / 05</span>
+      <span>VERBATIM</span>
+    </div>
+  </section>
+
+
+  <!-- =========================================================
+       S5 · S18 Why Now — Sprint 81 preview, 3 columns, last accent
+       ========================================================= -->
+  <section class="slide" data-slide="5">
+    <div class="chrome top">
+      <span>WHAT'S NEXT — SPRINT 81 PREVIEW</span>
+      <span class="accent">v1.11 CANDIDATE</span>
+      <span>2026.05.20 → 2026.06.03</span>
+    </div>
+
+    <div class="frame" style="inset: 56px 0 56px 0;">
+      <div style="padding: 0 48px 24px;">
+        <div class="label">№05 · ROADMAP</div>
+        <h2 class="display-l" style="margin-top:8px;">
+          Sprint 81 — <span style="color:var(--accent2)">scale,</span>
+          secure, monetize.
+        </h2>
+      </div>
+
+      <div class="cols-3" style="flex: 1; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 16px;">
+        <div class="col">
+          <div>
+            <div class="cat" style="color: var(--accent2);">POD 1 · TOURNAMENTS</div>
+            <h3>Live brackets &amp; cash payout flow</h3>
+            <p>
+              Move from sorted-set leaderboards to a bracket engine.
+              Adds payout state machine on top of <span class="mono" style="color:var(--accent2)">Sweeps.Tournaments</span> and a redeem screen in the player UI.
+            </p>
+          </div>
+          <div class="num-foot">8<small>EPICS QUEUED</small></div>
+        </div>
+
+        <div class="col">
+          <div>
+            <div class="cat" style="color: var(--accent2);">POD 2 · PROMOTIONS</div>
+            <h3>LootBox v2 + Daily Bonus integration</h3>
+            <p>
+              <span class="mono" style="color:var(--accent2)">WIN-6885</span> ships its second drop —
+              configurable odds, BI events through the EventHub worker, and a swimlane card in AVA.
+            </p>
+          </div>
+          <div class="num-foot">+12<small>BI EVENTS WIRED</small></div>
+        </div>
+
+        <div class="col accent">
+          <div>
+            <div class="cat">POD 3 · SECURITY · FEATURED</div>
+            <h3 style="color: var(--ink);">MFA rollout to 100% of US players</h3>
+            <p style="color: rgba(247,248,248,0.92);">
+              <span class="mono">WIN-6881</span> graduates from staged rollout to default-on.
+              Socure DocV + Twilio SMS form the fallback chain. KYC gate on first cash-out.
+            </p>
+          </div>
+          <div class="num-foot" style="color: var(--ink);">100%<small style="color: rgba(247,248,248,0.75);">US COVERAGE TARGET</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome bot">
+      <span>JIRA · WIN BOARD 600 · SPRINT 81</span>
+      <span>S05 / 05</span>
+      <span>END · THANK YOU</span>
+    </div>
+  </section>
+
+</div>
+
+<div class="counter mono">SLIDE <b id="counter-now">01</b> / 05</div>
+<div class="navhint mono"><kbd>←</kbd> PREV &nbsp; / &nbsp; <kbd>→</kbd> NEXT</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var counter = document.getElementById('counter-now');
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function show(idx) {
+      idx = Math.max(0, Math.min(slides.length - 1, idx));
+      slides.forEach(function (s, i) { s.classList.toggle('active', i === idx); });
+      counter.textContent = pad(idx + 1);
+      var hash = '#s' + (idx + 1);
+      if (location.hash !== hash) history.replaceState(null, '', hash);
+    }
+
+    function currentIndex() {
+      var m = (location.hash || '').match(/^#s(\d+)$/);
+      if (m) return parseInt(m[1], 10) - 1;
+      return slides.findIndex(function (s) { return s.classList.contains('active'); });
+    }
+
+    document.addEventListener('keydown', function (e) {
+      var i = currentIndex();
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); show(i + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); show(0); }
+      else if (e.key === 'End')  { e.preventDefault(); show(slides.length - 1); }
+    });
+
+    window.addEventListener('hashchange', function () { show(currentIndex()); });
+
+    // Init from hash if present
+    var start = currentIndex();
+    if (start < 0) start = 0;
+    show(start);
+  })();
+</script>
+
+</body>
+</html>

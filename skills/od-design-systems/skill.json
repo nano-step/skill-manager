@@ -1,7 +1,7 @@
 {
   "name": "od-design-systems",
   "version": "1.0.0",
-  "description": "Library of 151 brand-grade design systems (Linear, Stripe, Notion, Vercel, Tesla, Apple, Cursor, Supabase, Figma, Anthropic, OpenAI, Spotify, Discord, GitHub, +138 more). Each ships a complete DESIGN.md with palette hex codes, typography, components, layout, depth, responsive, and agent prompt guide.",
+  "description": "149 brand-grade design systems (Linear, Stripe, Notion, Tesla, Apple, Vercel, Cursor, Supabase, Figma, OpenAI, Anthropic, Spotify, Discord, GitHub, +135 more) — each a complete DESIGN.md with palette, typography, components, layout, and agent prompt guide.",
   "compatibility": "OpenCode + any frontend stack",
   "agent": null,
   "commands": [],

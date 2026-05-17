@@ -54,6 +54,17 @@ Production-quality HTML deck templates extracted from [nexu-io/open-design](http
 - `od-decks` (Swiss layout) + `od-design-systems` (Linear palette) → Linear-flavored engineering deck
 - `od-decks` (guizang) + `od-media-prompts` (motion intro) → magazine deck with cinematic opener
 
+### Composition mode (CRITICAL)
+
+Each deck template's own `SKILL.md` ships with 4–5 built-in palette options and may state "do not mix palettes / do not change hex codes". **When composing with `od-design-systems`, the design system's palette WINS** and overrides the template's built-in palettes:
+
+- ✅ Apply the design system's hex codes, font stack, and component patterns (from its `DESIGN.md`)
+- ✅ Apply the template's layout pool, structural rules, typography scale, and anti-slop rules (from its `SKILL.md`)
+- ❌ Do NOT mix two design systems' palettes in one deck
+- ❌ Do NOT mix the template's built-in palette WITH a design system — pick one source of truth for color
+
+In effect: deck template = **structure contract**, design system = **visual identity contract**. The template's built-in palettes are only used standalone, when no `od-design-systems` is paired.
+
 ## Quick example
 
 ```

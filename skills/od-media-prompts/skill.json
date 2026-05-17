@@ -1,7 +1,7 @@
 {
   "name": "od-media-prompts",
   "version": "1.0.0",
-  "description": "Library of 103 production-grade media-generation prompts (46 image + 57 video) for gpt-image-2, Seedance 2.0, HyperFrames, Imagen, fal.ai, and Sora. Adapt by swapping subject while preserving style/lighting/camera descriptors.",
+  "description": "Library of 102 production-grade media-generation prompts (45 image + 57 video) for gpt-image-2, Seedance 2.0, HyperFrames, Imagen, fal.ai, and Sora. Adapt by swapping subject while preserving style/lighting/camera descriptors.",
   "compatibility": "Any image/video generation API",
   "agent": null,
   "commands": [],
