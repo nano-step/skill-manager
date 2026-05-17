@@ -1,0 +1,17 @@
+{
+  "name": "od-decks",
+  "version": "1.0.0",
+  "description": "Generate magazine-style HTML presentation decks using 3 production-quality templates from Open Design — E-Ink editorial, Swiss International, and open-canvas slides. Wraps output in <artifact> tags.",
+  "compatibility": "OpenCode + any modern browser",
+  "agent": null,
+  "commands": [],
+  "tags": [
+    "design",
+    "deck",
+    "presentation",
+    "slides",
+    "html",
+    "magazine",
+    "open-design"
+  ]
+}
