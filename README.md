@@ -26,7 +26,7 @@ npx @nano-step/skill-manager install --all
 | `update [name]` | Update one or all installed skills |
 | `installed` | Show currently installed skills |
 
-## Available Skills (15 public + 5 private)
+## Available Skills (16 public + 6 private)
 
 ### Public Skills (bundled in npm)
 
@@ -38,6 +38,7 @@ npx @nano-step/skill-manager install --all
 | `idea-workflow` | Analyze source code and produce monetization strategy with execution blueprint |
 | `mermaid-validator` | Validate Mermaid diagram syntax — enforces rules that prevent parse errors |
 | `nano-brain` | Persistent memory for AI agents — hybrid search across sessions, codebase, and notes |
+| `open-design-mcp` | Use the open-design-mcp server — 8 MCP tools for project CRUD, BYOK design generation, lint & save artifacts |
 | `pdf` | PDF manipulation toolkit — extract, create, merge, split, OCR, fill forms, watermark |
 | `reddit-workflow` | Draft Reddit posts optimized for subreddit rules, tone, and spam filters |
 | `rtk` | Token optimizer — wraps CLI commands with rtk to reduce token consumption by 60-90% |
