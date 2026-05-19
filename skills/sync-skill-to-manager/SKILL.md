@@ -1,23 +1,24 @@
 ---
 name: sync-skill-to-manager
-description: "Sync a locally-developed OpenCode skill to the skill-manager npm package and (if private) the private-skills GitHub repo. Handles version bumps, npm publish, and respects the public/private boundary. Use this skill whenever the user says 'sync skill', 'publish skill', 'push skill to manager', '/sync-skill-to-manager <name>', or asks to release/distribute a skill they just edited."
-compatibility: "OpenCode with gh CLI authenticated as kokorolx + npm logged in as a skill-manager maintainer (nano-step001 or nhonh)"
+description: "Sync a locally-developed OpenCode skill to the skill-manager npm package and (if private) the private-skills GitHub repo. Handles per-skill version bumps, public/private classification, build verification, and conventional-commit-style git push. Auto-publish to npm is handled downstream by nano-step/shared-workflows@v1 when the push to master lands. Use this skill whenever the user says 'sync skill', 'publish skill', 'push skill to manager', '/sync-skill-to-manager <name>', or asks to release/distribute a skill they just edited."
+compatibility: "OpenCode with gh CLI authenticated as kokorolx. (npm publish is handled by the auto-publish workflow on master, not by this skill.)"
 metadata:
   author: Sisyphus
-  version: "1.0.0"
+  version: "2.0.0"
 ---
 
 # sync-skill-to-manager
 
-Distribute a local OpenCode skill to its publishing channels with one command. Picks up the source skill from the user's project or global config, classifies it as public or private, copies to the right repo(s), bumps versions, builds, commits, pushes, and `npm publish`es skill-manager.
+Distribute a local OpenCode skill to its publishing channels with one command. Picks up the source skill from the user's project or global config, classifies it as public or private, copies to the right repo(s), bumps per-skill versions, builds, commits, and pushes.
+
+**npm publish is NOT this skill's job anymore.** The `nano-step/shared-workflows@v1 publish-stable` reusable workflow on `nano-step/skill-manager`'s `master` branch handles npm publish automatically when this skill's push lands — including bumping `skill-manager`'s own `package.json` version, generating `CHANGELOG.md`, tagging, and creating the GitHub Release. This skill stops at `git push`.
 
 ## TL;DR
 
 ```
-/sync-skill-to-manager <skill-name>          # full sync + publish
-/sync-skill-to-manager <skill-name> --dry-run   # preview only
-/sync-skill-to-manager <skill-name> --no-publish # commit + push, skip npm
-/sync-skill-to-manager <skill-name> --no-push    # local commit only
+/sync-skill-to-manager <skill-name>            # sync + commit + push (auto-publish takes over on master)
+/sync-skill-to-manager <skill-name> --dry-run  # preview only
+/sync-skill-to-manager <skill-name> --no-push  # local commit only (manual push later)
 ```
 
 ## Hard-coded paths (this skill is opinionated about layout)
@@ -67,7 +68,7 @@ Only proceed with the sync after the user decides.
 
 ## Workflow
 
-Pre-flight runs the helper script `scripts/sync.sh` for the heavy lifting. The orchestrator (this skill) handles user prompts, classification decisions, and final summary. The helper handles git/npm operations.
+Pre-flight runs the helper script `scripts/sync.sh` for the heavy lifting. The orchestrator (this skill) handles user prompts, classification decisions, and final summary. The helper handles file mirroring, build verification, and git operations. **No `npm` operations.**
 
 ### Step 1 — Pre-flight checks
 
@@ -78,10 +79,11 @@ Run `scripts/preflight.sh <name>`. It exits non-zero with a specific message if 
 3. Source `SKILL.md` exists and has parseable YAML frontmatter
 4. Source `skill.json` exists and is valid JSON with `name`, `version`, `description`
 5. `gh auth status` shows `kokorolx` as active
-6. `npm whoami` returns `nano-step001` or `nhonh` — the two maintainers (only enforced if not `--no-publish`)
-7. Token-leak scan on source: `grep -rE 'gho_[A-Za-z0-9]{30,}|ghp_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}'` — abort if matches found
-8. `git -C ${SKILL_MANAGER_REPO} status --porcelain` is empty (or only matches the files we're about to touch)
-9. `git -C ${PRIVATE_SKILLS_REPO} status --porcelain` is empty (only checked if private)
+6. Token-leak scan on source: `grep -rE 'gho_[A-Za-z0-9]{30,}|ghp_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}'` — abort if matches found
+7. `git -C ${SKILL_MANAGER_REPO} status --porcelain` is empty (or only matches the files we're about to touch)
+8. `git -C ${PRIVATE_SKILLS_REPO} status --porcelain` is empty (only checked if private)
+
+(`npm whoami` is no longer checked — this skill does not publish to npm. That's handled by the auto-publish workflow on the server side using the org-level `NPM_TOKEN`.)
 
 If any fails: report the exact failure and stop. Do not auto-fix.
 
@@ -103,10 +105,9 @@ After preflight:
        • <target-path-1>  (currently v<remote-version>)
        • <target-path-2>  (catalog entry only)
      Version action: <use-as-is | bump-patch | abort-source-behind>
-     skill-manager: v<old> → v<new>
      Commits:    <count> across <repo-count> repo(s)
      Push:       <yes|no>
-     npm publish: <yes|no>
+     npm publish: (handled by auto-publish workflow on master push)
    Proceed? (yes/no)
    ```
 
@@ -150,7 +151,7 @@ private:
 
 Do NOT copy: `.git/`, `node_modules/`, `.checkpoints/`, `.DS_Store`. Use `--exclude` flags.
 
-### Step 6 — Build skill-manager
+### Step 6 — Build skill-manager (smoke test)
 
 ```bash
 cd ${SKILL_MANAGER_REPO}
@@ -159,18 +160,11 @@ npm run build
 
 If build fails → abort. Do NOT commit broken state.
 
-### Step 7 — Bump skill-manager package version
+This step exists as a **local smoke test** — it catches TypeScript errors before pushing broken code to master. The auto-publish workflow on master will also build (via `prepublishOnly`), but failing fast locally is friendlier.
 
-Always patch-bump `${SKILL_MANAGER_REPO}/package.json`. Use:
+**`skill-manager`'s `package.json` version is NOT touched by this skill.** The auto-publish workflow inspects the conventional-commit message and patches/minors/majors the version itself. Adding our own bump here would cause double-bumps.
 
-```bash
-cd ${SKILL_MANAGER_REPO}
-npm version patch --no-git-tag-version
-```
-
-Capture new version → `$NEW_MANAGER_VERSION`.
-
-### Step 8 — Commit
+### Step 7 — Commit
 
 Use `scripts/commit.sh` which runs (per repo) with conventional-commit messages:
 
@@ -180,17 +174,20 @@ Use `scripts/commit.sh` which runs (per repo) with conventional-commit messages:
 - New private skill (catalog only): `feat(<name>): add to private catalog v<X.Y.Z>`
 - Updated private (catalog version bump only): `chore(<name>): bump catalog to v<X.Y.Z>`
 - Privacy leak removal: `fix: remove leaked private skill <name> from public bundle`
-- Manager version bump: `chore: bump to v<NEW_MANAGER_VERSION>`
 
 These can be combined into a single commit when they belong together.
+
+**Why the conventional-commit type matters now:** The auto-publish workflow translates types into semver bumps — `feat:` → minor bump on `skill-manager`, `fix:`/`chore:`/`docs:` → patch bump, anything with `!` or `BREAKING CHANGE` → major bump. Pick the type that reflects the impact on `@nano-step/skill-manager` users.
 
 **private-skills** commit message:
 - New: `feat(<name>): add v<X.Y.Z>`
 - Update: `feat(<name>): sync v<old> → v<new>` (or `chore` if patch)
 
+(The `private-skills` repo does not yet have its own auto-publish workflow — commit type there is informational only.)
+
 NEVER add `Co-authored-by`, `Signed-off-by`, or AI attribution trailers (per workspace AGENTS.md).
 
-### Step 9 — Push
+### Step 8 — Push
 
 If `--no-push` not set:
 
@@ -201,24 +198,9 @@ git -C ${PRIVATE_SKILLS_REPO} push   # only if private
 
 The skill-manager remote is HTTPS+token. The private-skills remote uses both SSH (fetch) and HTTPS+token (push) — `git push` will use the push URL. Both rely on the embedded token or `gh auth setup-git`. If push fails on auth → STOP and surface the error verbatim.
 
-### Step 10 — npm publish
+**As soon as the push to `master` lands**, GitHub Actions fires `nano-step/skill-manager`'s `Publish Stable` workflow (calls `nano-step/shared-workflows@v1`). That workflow takes over: it inspects the commit, picks the semver bump, updates `package.json`, regenerates `CHANGELOG.md`, commits with `[skip ci]`, tags `vX.Y.Z`, runs `npm publish --tag latest`, and creates a GitHub Release. **You are done from this skill's perspective.**
 
-If `--no-publish` not set:
-
-```
-🚀 Publish @nano-step/skill-manager v<NEW_MANAGER_VERSION> to npm? (yes/no)
-```
-
-Even with auto-push enabled, **always** ask before npm publish — npm publishes are immutable.
-
-```bash
-cd ${SKILL_MANAGER_REPO}
-npm publish --access public
-```
-
-The `prepublishOnly` script in package.json runs `npm run build` automatically (already done in step 6, but re-runs for safety).
-
-### Step 11 — Summary
+### Step 9 — Summary
 
 Print:
 ```
@@ -226,7 +208,6 @@ Print:
 
   Classification: <public|private>
   Source version: v<X.Y.Z>
-  skill-manager:  v<old> → v<NEW_MANAGER_VERSION>
 
   Commits:
     • skill-manager:  <sha-short> <subject>
@@ -236,20 +217,24 @@ Print:
     • https://github.com/nano-step/skill-manager/commit/<sha>
     • https://github.com/nano-step/private-skills/commit/<sha>   (if applicable)
 
-  Published:
-    • https://www.npmjs.com/package/@nano-step/skill-manager/v/<NEW_MANAGER_VERSION>
-    • Install: npx @nano-step/skill-manager update <name>
+  Auto-publish: triggered on push to master.
+    Watch: https://github.com/nano-step/skill-manager/actions
+    Once the run completes, install with:
+      npx @nano-step/skill-manager update <name>
 ```
 
 ## Flags
 
 | Flag | Effect |
 |---|---|
-| `--dry-run` | Print the full plan and exit. No writes, no git, no npm. |
-| `--no-push` | Commit locally but don't push. Skips npm publish (would publish stale state). |
-| `--no-publish` | Commit + push, but skip npm publish. |
+| `--dry-run` | Print the full plan and exit. No writes, no git. |
+| `--no-push` | Commit locally but don't push. (Auto-publish doesn't fire until you push.) |
 | `--force` | Skip dirty-state check. Still requires explicit user `yes` confirmation. |
 | `--source <path>` | Override source skill location (skip resolution). |
+| `--classify public\|private` | Override classification (required for brand-new skills). |
+| `--remove-leak` | Required when syncing a private skill that has a leaked copy in `skill-manager/skills/`. Removes the leaked copy as part of the commit. |
+
+`--no-publish` was removed in v2.0.0 — this skill no longer publishes to npm. Auto-publish is now handled by `nano-step/shared-workflows@v1` on `nano-step/skill-manager`'s `master` branch.
 
 ## Error messages (be specific)
 
@@ -261,7 +246,6 @@ Print:
 | Token leak | `Token-like pattern detected in <file>:<line>. Refusing to sync. Remove the secret first.` |
 | Dirty repo | `<repo> has uncommitted changes:\n<status output>\nCommit, stash, or pass --force.` |
 | gh auth wrong account | `Expected gh active account 'kokorolx', got '<user>'. Run: gh auth switch -u kokorolx` |
-| npm wrong account | `Expected npm whoami 'nano-step001' or 'nhonh', got '<user>'. Run: npm login` |
 | Build failed | `npm run build failed in skill-manager. Output:\n<output>\nNot committing.` |
 | Push failed | `git push to <remote> failed:\n<output>\nManual intervention required.` |
 | Privacy leak detected | (interactive prompt) |
@@ -269,11 +253,11 @@ Print:
 ## Anti-patterns (this skill MUST NOT do)
 
 - Push without explicit user invocation of the skill (running the skill IS the consent — but `--no-push` overrides)
-- `npm publish` without explicit `yes` from the user
+- Run `npm publish` — that's the auto-publish workflow's job. This skill must never call `npm publish`, `npm version`, or modify `skill-manager`'s top-level `package.json` `version` field.
 - Add AI attribution / `Co-authored-by` to commits
 - Commit private skill files into `${SKILL_MANAGER_REPO}/skills/`
-- Bump major or minor version automatically — only patch
-- Skip the build step before committing
+- Bump per-skill (inside `skills/`) major or minor version automatically — only patch
+- Skip the build step before committing (it's a smoke test for TS errors)
 - Use `git push --force` ever
 - Edit unrelated files in either repo
 

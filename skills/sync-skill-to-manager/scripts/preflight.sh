@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
-# Usage: preflight.sh <skill-name> [--no-publish]
+# Usage: preflight.sh <skill-name>
+#
+# npm publish is no longer this skill's concern (handled by the auto-publish
+# workflow on master), so we no longer check `npm whoami`.
 
 set -euo pipefail
 
 SKILL_NAME="${1:-}"
-NO_PUBLISH="${2:-}"
 
 if [ -z "$SKILL_NAME" ]; then
   echo "preflight: missing skill name" >&2
   exit 2
+fi
+
+if [ "${2:-}" = "--no-publish" ]; then
+  echo "⚠️  --no-publish is deprecated (v2.0.0): preflight no longer cares about npm publish. Ignoring." >&2
 fi
 
 SKILL_MANAGER_REPO="/Users/tamlh/workspaces/self/AI/Tools/skill-manager"
@@ -64,16 +70,6 @@ if [ "$GH_USER" != "kokorolx" ]; then
   fail "expected gh active account 'kokorolx', got '${GH_USER:-none}'. Run: gh auth switch -u kokorolx"
 fi
 
-if [ "$NO_PUBLISH" != "--no-publish" ]; then
-  if ! command -v npm >/dev/null 2>&1; then
-    fail "npm not installed"
-  fi
-  NPM_USER="$(npm whoami 2>/dev/null || echo "")"
-  if [ "$NPM_USER" != "nano-step001" ] && [ "$NPM_USER" != "nhonh" ]; then
-    fail "expected npm whoami 'nano-step001' or 'nhonh' (skill-manager maintainers), got '${NPM_USER:-not-logged-in}'. Run: npm login"
-  fi
-fi
-
 LEAK_PATTERNS='gho_[A-Za-z0-9]{30,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{40,}'
 LEAKS="$(grep -rEn "$LEAK_PATTERNS" "$SOURCE_DIR" 2>/dev/null || true)"
 if [ -n "$LEAKS" ]; then
@@ -109,8 +105,6 @@ if [ -n "$PS_DIRTY" ]; then
   fi
 fi
 
-# Output for the orchestrator to capture
 echo "PREFLIGHT_OK"
 echo "SOURCE_DIR=$SOURCE_DIR"
 echo "GH_USER=$GH_USER"
-[ "$NO_PUBLISH" != "--no-publish" ] && echo "NPM_USER=$NPM_USER"
