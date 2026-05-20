@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.10.0] — 2026-05-20
+
+### Added
+- feat(cloudflare-api-investigator): add to private catalog v1.0.0
+
+**Install:** `npm install @nano-step/skill-manager@5.10.0`
+
+---
+
 ## [5.9.0] — 2026-05-20
 
 ### Added
