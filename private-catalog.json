@@ -1,52 +1,57 @@
 [
-    {
-        "name": "blackbox-testing",
-        "version": "1.0.0",
-        "description": "Autonomous black box testing for ANY running web application without PRD or documentation. Full penetration testing depth with OWASP coverage. Use when user says: black box test, test this URL, pentest, security audit, vulnerability scan, find bugs, OWASP, break this app, hack test, smoke test a URL."
-    },
-    {
-        "name": "database-inspector",
-        "version": "1.0.0",
-        "description": "Database schema inspection for MySQL and PostgreSQL \u2014 progressive discovery workflow with read-only SQL execution"
-    },
-    {
-        "name": "deep-design",
-        "version": "2.0.0",
-        "description": "Multi-agent planning pipeline with LLM Council patterns: Metis + Oracle \u2192 Cross-Critique \u2192 Confidence-scored Synthesis \u2192 Momus Sanity Check \u2192 OpenSpec \u2192 Full Momus Review. Graceful degradation on agent failure."
-    },
-    {
-        "name": "e2e-case-planner",
-        "version": "1.0.0",
-        "description": "Draft browser-clickable E2E test cases from a Linear ticket + PR(s). Reads the actual frontend and backend code to produce a tester-ready runbook in a strict TC-XXX format. Output is for QA execution, not code review. Use when the user says 'draft e2e cases', 'write test cases for this PR', 'create QA test plan from ticket', '/e2e-case-planner <ticket-or-PR>', or asks to plan testing for a backend change that affects a UI."
-    },
-    {
-        "name": "e2e-test-generator",
-        "version": "1.0.0",
-        "description": "AI-driven E2E test generation from PRD requirements using Playwright MCP"
-    },
-    {
-        "name": "enhance-prompt",
-        "version": "1.0.0",
-        "description": "Use when the user wants to rewrite, improve, refine, or enhance a prompt before sending it to an LLM. Triggers on phrases like \"enhance this prompt\", \"improve this prompt\", \"rewrite as a better prompt\", or \"/enhance-prompt\"."
-    },
-    {
-        "name": "feature-analysis",
-        "version": "2.0.0",
-        "description": "Deep code analysis of any feature or service before writing docs, diagrams, or making changes"
-    },
-    {
-        "name": "harness-init",
-        "version": "0.1.0",
-        "description": "Bootstrap a Sisyphus-compatible engineering harness in any project. Generates HARNESS.md, FEATURE_INTAKE.md, story template, HARNESS_BACKLOG.md, optional OpenSpec config, GitHub issue tracking labels, and validation ladder customized to the project's stack via guided Q&A. Use when starting a new project that needs spec-driven risk-classified workflow, adopting the harness pattern in an existing project, or standardizing how AI agents propose/implement/review/ship changes."
-    },
-    {
-        "name": "pr-code-reviewer",
-        "version": "3.4.0",
-        "description": "PR review with 4 parallel subagents, stack-aware setup wizard (Nuxt/Next/React/Express/NestJS/TypeORM/Prisma), AGENTS.md knowledge base integration, cross-repo tracing, verification pipeline, confidence scoring, and git worktree checkout (no /tmp clones). READ-ONLY \u2014 no comments, pushes, or code fixes."
-    },
-    {
-        "name": "rri-t-testing",
-        "version": "1.1.0",
-        "description": "RRI-T QA methodology \u2014 5-phase testing with 7 dimensions, 5 personas, release gates, Vietnamese-specific testing (13 cases), performance budgets, security checklist (8 areas), and dimension checklists (D5/D6)"
-    }
+  {
+    "name": "blackbox-testing",
+    "version": "1.0.0",
+    "description": "Autonomous black box testing for ANY running web application without PRD or documentation. Full penetration testing depth with OWASP coverage. Use when user says: black box test, test this URL, pentest, security audit, vulnerability scan, find bugs, OWASP, break this app, hack test, smoke test a URL."
+  },
+  {
+    "name": "database-inspector",
+    "version": "1.0.0",
+    "description": "Database schema inspection for MySQL and PostgreSQL — progressive discovery workflow with read-only SQL execution"
+  },
+  {
+    "name": "datadog-pup-investigator",
+    "version": "2.0.0",
+    "description": "Bug-hunting workflow orchestrator for Datadog investigations in the ZenGamingX workspace. Delegates command syntax to the official datadog-labs/agent-skills (dd-pup, dd-logs, dd-apm, dd-monitors, dd-audit*) and owns only the workflow: scope → monitors → logs → traces → metrics, with workspace service map and read-only guardrails. Use when investigating production bugs, error spikes, latency issues, or cross-service incidents in tradeit-backend / tradeit-service / pricing-manager etc."
+  },
+  {
+    "name": "deep-design",
+    "version": "2.0.0",
+    "description": "Multi-agent planning pipeline with LLM Council patterns: Metis + Oracle → Cross-Critique → Confidence-scored Synthesis → Momus Sanity Check → OpenSpec → Full Momus Review. Graceful degradation on agent failure."
+  },
+  {
+    "name": "e2e-case-planner",
+    "version": "1.0.0",
+    "description": "Draft browser-clickable E2E test cases from a Linear ticket + PR(s). Reads the actual frontend and backend code to produce a tester-ready runbook in a strict TC-XXX format. Output is for QA execution, not code review. Use when the user says 'draft e2e cases', 'write test cases for this PR', 'create QA test plan from ticket', '/e2e-case-planner <ticket-or-PR>', or asks to plan testing for a backend change that affects a UI."
+  },
+  {
+    "name": "e2e-test-generator",
+    "version": "1.0.0",
+    "description": "AI-driven E2E test generation from PRD requirements using Playwright MCP"
+  },
+  {
+    "name": "enhance-prompt",
+    "version": "1.0.0",
+    "description": "Use when the user wants to rewrite, improve, refine, or enhance a prompt before sending it to an LLM. Triggers on phrases like \"enhance this prompt\", \"improve this prompt\", \"rewrite as a better prompt\", or \"/enhance-prompt\"."
+  },
+  {
+    "name": "feature-analysis",
+    "version": "2.0.0",
+    "description": "Deep code analysis of any feature or service before writing docs, diagrams, or making changes"
+  },
+  {
+    "name": "harness-init",
+    "version": "0.1.0",
+    "description": "Bootstrap a Sisyphus-compatible engineering harness in any project. Generates HARNESS.md, FEATURE_INTAKE.md, story template, HARNESS_BACKLOG.md, optional OpenSpec config, GitHub issue tracking labels, and validation ladder customized to the project's stack via guided Q&A. Use when starting a new project that needs spec-driven risk-classified workflow, adopting the harness pattern in an existing project, or standardizing how AI agents propose/implement/review/ship changes."
+  },
+  {
+    "name": "pr-code-reviewer",
+    "version": "3.4.0",
+    "description": "PR review with 4 parallel subagents, stack-aware setup wizard (Nuxt/Next/React/Express/NestJS/TypeORM/Prisma), AGENTS.md knowledge base integration, cross-repo tracing, verification pipeline, confidence scoring, and git worktree checkout (no /tmp clones). READ-ONLY — no comments, pushes, or code fixes."
+  },
+  {
+    "name": "rri-t-testing",
+    "version": "1.1.0",
+    "description": "RRI-T QA methodology — 5-phase testing with 7 dimensions, 5 personas, release gates, Vietnamese-specific testing (13 cases), performance budgets, security checklist (8 areas), and dimension checklists (D5/D6)"
+  }
 ]
