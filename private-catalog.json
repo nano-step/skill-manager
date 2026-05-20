@@ -5,6 +5,11 @@
     "description": "Autonomous black box testing for ANY running web application without PRD or documentation. Full penetration testing depth with OWASP coverage. Use when user says: black box test, test this URL, pentest, security audit, vulnerability scan, find bugs, OWASP, break this app, hack test, smoke test a URL."
   },
   {
+    "name": "cloudflare-api-investigator",
+    "version": "1.0.0",
+    "description": "Direct Cloudflare REST API investigator via curl + bearer token sourced from ~/.bashrc. Use when the Cloudflare MCP is unavailable and you need to inspect DNS records, zone settings, WAF rules, firewall events, rate limiting, cache, SSL/TLS, analytics, page rules, or audit logs for tradeit.gg. Read-only by default — writes blocked without explicit user approval. Strict secret-handling: token never echoed, logged, or pasted into output."
+  },
+  {
     "name": "database-inspector",
     "version": "1.0.0",
     "description": "Database schema inspection for MySQL and PostgreSQL — progressive discovery workflow with read-only SQL execution"
