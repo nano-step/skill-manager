@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 
+
+## [5.9.0] — 2026-05-20
+
+### Added
+- feat(datadog-pup-investigator): add to private catalog v2.0.0
+
+**Install:** `npm install @nano-step/skill-manager@5.9.0`
+
+---
+
 ## [5.8.0] — 2026-05-19
 
 ### Added
