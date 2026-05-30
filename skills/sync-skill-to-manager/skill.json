@@ -1,15 +1,14 @@
 {
     "name": "sync-skill-to-manager",
-    "version": "1.0.0",
-    "description": "Sync a locally-developed OpenCode skill to the skill-manager npm package and (if private) the private-skills GitHub repo. Handles version bumps, npm publish, and respects the public/private boundary. Use when the user says 'sync skill', 'publish skill', 'push skill to manager', or '/sync-skill-to-manager <name>'.",
-    "compatibility": "OpenCode with gh CLI authenticated as kokorolx + npm logged in as a skill-manager maintainer (nano-step001 or nhonh)",
+    "version": "2.0.0",
+    "description": "Sync a locally-developed OpenCode skill to the skill-manager npm package and (if private) the private-skills GitHub repo. Handles per-skill version bumps, public/private classification, build verification, and conventional-commit-style git push. Auto-publish to npm is handled downstream by nano-step/shared-workflows@v1 when the push to master lands. Use when the user says 'sync skill', 'publish skill', 'push skill to manager', or '/sync-skill-to-manager <name>'.",
+    "compatibility": "OpenCode with gh CLI authenticated as kokorolx. npm publish is handled by the auto-publish workflow on master, not by this skill.",
     "agent": null,
     "commands": [],
     "tags": [
         "skill-management",
         "publishing",
         "ci-cd",
-        "npm",
         "git"
     ]
 }

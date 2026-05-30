@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Usage: sync.sh <skill-name> [--dry-run] [--no-push] [--no-publish] [--force] [--source <path>] [--classify public|private]
+# Usage: sync.sh <skill-name> [--dry-run] [--no-push] [--force] [--source <path>] [--classify public|private] [--remove-leak]
+#
+# This script syncs a local skill into skill-manager (and private-skills if applicable),
+# commits, and pushes. It does NOT publish to npm — that is handled by the
+# nano-step/shared-workflows@v1 auto-publish workflow on skill-manager's master branch.
 
 set -euo pipefail
 
@@ -11,7 +15,6 @@ PRIVATE_CATALOG="$SKILL_MANAGER_REPO/private-catalog.json"
 SKILL_NAME=""
 DRY_RUN=0
 NO_PUSH=0
-NO_PUBLISH=0
 FORCE=0
 SOURCE_OVERRIDE=""
 CLASSIFY_OVERRIDE=""
@@ -21,13 +24,15 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY_RUN=1 ;;
     --no-push) NO_PUSH=1 ;;
-    --no-publish) NO_PUBLISH=1 ;;
+    --no-publish)
+      echo "⚠️  --no-publish is deprecated (v2.0.0): npm publish is handled by the auto-publish workflow now. Ignoring." >&2
+      ;;
     --force) FORCE=1 ;;
     --source) SOURCE_OVERRIDE="$2"; shift ;;
     --classify) CLASSIFY_OVERRIDE="$2"; shift ;;
     --remove-leak) REMOVE_LEAK=1 ;;
     -h|--help)
-      head -2 "$0" | tail -1 | sed 's/^# //'
+      head -4 "$0" | tail -3 | sed 's/^# //'
       exit 0
       ;;
     --*) echo "unknown flag: $1" >&2; exit 2 ;;
@@ -41,10 +46,7 @@ if [ -z "$SKILL_NAME" ]; then
   exit 2
 fi
 
-PUBLISH_FLAG=""
-[ $NO_PUBLISH -eq 1 ] && PUBLISH_FLAG="--no-publish"
-
-PRE_OUT="$("$SCRIPT_DIR/preflight.sh" "$SKILL_NAME" $PUBLISH_FLAG 2>&1 || true)"
+PRE_OUT="$("$SCRIPT_DIR/preflight.sh" "$SKILL_NAME" 2>&1 || true)"
 echo "$PRE_OUT"
 echo "$PRE_OUT" | grep -q "^PREFLIGHT_OK$" || {
   echo "$PRE_OUT" | grep -q "^AMBIGUOUS_SOURCE" && {
@@ -136,11 +138,7 @@ case "$CMP" in
     ;;
 esac
 
-NEW_MANAGER_VERSION="$(node -p "
-  const v = require('$SKILL_MANAGER_REPO/package.json').version.split('.').map(Number);
-  v[2] += 1;
-  v.join('.');
-")"
+CURRENT_MANAGER_VERSION="$(node -p "require('$SKILL_MANAGER_REPO/package.json').version")"
 
 cat <<EOF
 
@@ -149,9 +147,9 @@ cat <<EOF
   Source:    $SOURCE_DIR  (v$SOURCE_VERSION)
   Target:    $TARGET_DIR  (currently v$REMOTE_VERSION)
   Version:   $VERSION_ACTION
-  Manager:   v$(node -p "require('$SKILL_MANAGER_REPO/package.json').version") → v$NEW_MANAGER_VERSION
+  Manager:   v$CURRENT_MANAGER_VERSION (will be auto-bumped by CI after push)
   Push:      $([ $NO_PUSH -eq 1 ] && echo no || echo yes)
-  Publish:   $([ $NO_PUBLISH -eq 1 ] && echo no || echo yes)
+  Publish:   handled by nano-step/shared-workflows@v1 on master push
 EOF
 
 if [ $DRY_RUN -eq 1 ]; then
@@ -202,14 +200,11 @@ if [ "$CLASSIFICATION" = "private" ]; then
   echo "✓ updated private-catalog.json entry for $SKILL_NAME"
 fi
 
-(cd "$SKILL_MANAGER_REPO" && npm version patch --no-git-tag-version --allow-same-version >/dev/null)
-echo "✓ bumped skill-manager package.json to v$NEW_MANAGER_VERSION"
-
 (cd "$SKILL_MANAGER_REPO" && npm run build) || {
   echo "❌ npm run build failed — not committing" >&2
   exit 1
 }
-echo "✓ built skill-manager"
+echo "✓ built skill-manager (smoke test passed)"
 
 case "$VERSION_ACTION" in
   use-as-is) SKILL_COMMIT_VERB="sync" ;;
@@ -219,23 +214,15 @@ esac
 SM_COMMIT_MSG=""
 if [ "$CLASSIFICATION" = "public" ]; then
   if [ "$REMOTE_VERSION" = "0.0.0" ]; then
-    SM_COMMIT_MSG="feat($SKILL_NAME): add v$SOURCE_VERSION
-
-chore: bump to v$NEW_MANAGER_VERSION"
+    SM_COMMIT_MSG="feat($SKILL_NAME): add v$SOURCE_VERSION"
   else
-    SM_COMMIT_MSG="feat($SKILL_NAME): $SKILL_COMMIT_VERB v$REMOTE_VERSION → v$SOURCE_VERSION
-
-chore: bump to v$NEW_MANAGER_VERSION"
+    SM_COMMIT_MSG="feat($SKILL_NAME): $SKILL_COMMIT_VERB v$REMOTE_VERSION → v$SOURCE_VERSION"
   fi
 else
   if [ "$REMOTE_VERSION" = "0.0.0" ]; then
-    SM_COMMIT_MSG="feat($SKILL_NAME): add to private catalog v$SOURCE_VERSION
-
-chore: bump to v$NEW_MANAGER_VERSION"
+    SM_COMMIT_MSG="feat($SKILL_NAME): add to private catalog v$SOURCE_VERSION"
   else
-    SM_COMMIT_MSG="chore($SKILL_NAME): bump catalog to v$SOURCE_VERSION
-
-chore: bump to v$NEW_MANAGER_VERSION"
+    SM_COMMIT_MSG="chore($SKILL_NAME): bump catalog to v$SOURCE_VERSION"
   fi
   if [ $REMOVE_LEAK -eq 1 ]; then
     SM_COMMIT_MSG="$SM_COMMIT_MSG
@@ -259,33 +246,27 @@ if [ "$CLASSIFICATION" = "private" ]; then
 fi
 
 if [ $NO_PUSH -eq 1 ]; then
-  echo "⏭  --no-push: skipping push and publish"
+  echo "⏭  --no-push: skipping push (auto-publish will NOT fire until you push manually)"
   exit 0
 fi
 
 git -C "$SKILL_MANAGER_REPO" push
-echo "✓ pushed skill-manager"
+echo "✓ pushed skill-manager → auto-publish workflow triggered"
 
 if [ "$CLASSIFICATION" = "private" ]; then
   git -C "$PRIVATE_SKILLS_REPO" push
   echo "✓ pushed private-skills"
 fi
 
-if [ $NO_PUBLISH -eq 1 ]; then
-  echo "⏭  --no-publish: skipping npm publish"
-  exit 0
-fi
-
-(cd "$SKILL_MANAGER_REPO" && npm publish --access public)
-echo "✓ published @nano-step/skill-manager v$NEW_MANAGER_VERSION"
-
 cat <<EOF
 
 ✅ sync complete for '$SKILL_NAME'
   Classification: $CLASSIFICATION
   Source version: v$SOURCE_VERSION
-  skill-manager:  v$NEW_MANAGER_VERSION
   Commit (sm):    $SM_SHA
   Commit (ps):    ${PS_SHA:-n/a}
-  Install:        npx @nano-step/skill-manager update $SKILL_NAME
+
+  Auto-publish:   triggered on push to master
+    Watch:        https://github.com/nano-step/skill-manager/actions
+    Once green:   npx @nano-step/skill-manager update $SKILL_NAME
 EOF

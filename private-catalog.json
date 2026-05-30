@@ -5,9 +5,19 @@
     "description": "Autonomous black box testing for ANY running web application without PRD or documentation. Full penetration testing depth with OWASP coverage. Use when user says: black box test, test this URL, pentest, security audit, vulnerability scan, find bugs, OWASP, break this app, hack test, smoke test a URL."
   },
   {
+    "name": "cloudflare-api-investigator",
+    "version": "1.0.0",
+    "description": "Direct Cloudflare REST API investigator via curl + bearer token sourced from ~/.bashrc. Use when the Cloudflare MCP is unavailable and you need to inspect DNS records, zone settings, WAF rules, firewall events, rate limiting, cache, SSL/TLS, analytics, page rules, or audit logs for tradeit.gg. Read-only by default — writes blocked without explicit user approval. Strict secret-handling: token never echoed, logged, or pasted into output."
+  },
+  {
     "name": "database-inspector",
     "version": "1.0.0",
     "description": "Database schema inspection for MySQL and PostgreSQL — progressive discovery workflow with read-only SQL execution"
+  },
+  {
+    "name": "datadog-pup-investigator",
+    "version": "2.0.0",
+    "description": "Bug-hunting workflow orchestrator for Datadog investigations in the ZenGamingX workspace. Delegates command syntax to the official datadog-labs/agent-skills (dd-pup, dd-logs, dd-apm, dd-monitors, dd-audit*) and owns only the workflow: scope → monitors → logs → traces → metrics, with workspace service map and read-only guardrails. Use when investigating production bugs, error spikes, latency issues, or cross-service incidents in tradeit-backend / tradeit-service / pricing-manager etc."
   },
   {
     "name": "deep-design",
@@ -33,6 +43,11 @@
     "name": "feature-analysis",
     "version": "2.0.0",
     "description": "Deep code analysis of any feature or service before writing docs, diagrams, or making changes"
+  },
+  {
+    "name": "harness-init",
+    "version": "0.1.0",
+    "description": "Bootstrap a Sisyphus-compatible engineering harness in any project. Generates HARNESS.md, FEATURE_INTAKE.md, story template, HARNESS_BACKLOG.md, optional OpenSpec config, GitHub issue tracking labels, and validation ladder customized to the project's stack via guided Q&A. Use when starting a new project that needs spec-driven risk-classified workflow, adopting the harness pattern in an existing project, or standardizing how AI agents propose/implement/review/ship changes."
   },
   {
     "name": "pr-code-reviewer",

@@ -1,9 +1,0 @@
-{
-  "name": "rri-t-testing",
-  "version": "1.1.0",
-  "description": "RRI-T QA methodology — 5-phase testing (PREPARE, DISCOVER, STRUCTURE, EXECUTE, ANALYZE) with 7 dimensions, 5 personas, release gates, Vietnamese-specific testing, performance budgets, security checklist, and dimension checklists",
-  "compatibility": "OpenCode",
-  "agent": null,
-  "commands": [],
-  "tags": ["testing", "qa", "rri-t", "release-gates", "test-cases"]
-}
