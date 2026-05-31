@@ -7,6 +7,15 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.14.1] — 2026-05-31
+
+_No notable changes_
+
+**Install:** `npm install @nano-step/skill-manager@5.14.1`
+
+---
+
 ## [5.13.0] — 2026-05-31
 
 ### Added
