@@ -16,4 +16,4 @@ jobs:
     with:
       package-name: "@nano-step/skill-manager"
     secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NHO_NPM_TOKEN }}
