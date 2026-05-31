@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.11.0] — 2026-05-31
+
+### Added
+- feat(iamhumans): add iamhumans v1.1.1 — humanization skill for LLM conversation
+
+**Install:** `npm install @nano-step/skill-manager@5.11.0`
+
+---
+
 ## [5.10.0] — 2026-05-20
 
 ### Added

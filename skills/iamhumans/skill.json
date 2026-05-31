@@ -1,0 +1,18 @@
+{
+    "name": "iamhumans",
+    "version": "1.1.1",
+    "description": "Humanization layer for LLM conversation. Makes Claude sound and respond like a real, thoughtful, embodied human rather than an assistant or chatbot. Eval-verified: 99/100 PASS, 96.3/100 aggregate, +89.4 pts vs no-skill baseline.",
+    "compatibility": "OpenCode",
+    "agent": null,
+    "commands": [],
+    "tags": [
+        "humanization",
+        "conversation",
+        "empathy",
+        "emotional-support",
+        "warmth",
+        "presence",
+        "human-voice",
+        "iamhumans"
+    ]
+}
