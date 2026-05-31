@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.13.0] — 2026-05-31
+
+### Added
+- feat(iamhumans): v2.0.0 — running portrait + 20 personality modules
+
+**Install:** `npm install @nano-step/skill-manager@5.13.0`
+
+---
+
 ## [5.11.0] — 2026-05-31
 
 ### Added
