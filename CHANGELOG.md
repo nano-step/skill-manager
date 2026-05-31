@@ -8,6 +8,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.16.0] — 2026-05-31
+
+### Added
+- feat: iamhumans v2.1.0 — 36 book-grounded rules, 240-case eval corpus
+
+**Install:** `npm install @nano-step/skill-manager@5.16.0`
+
+---
+
 ## [5.14.1] — 2026-05-31
 
 _No notable changes_
