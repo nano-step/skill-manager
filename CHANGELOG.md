@@ -12,6 +12,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.19.0] — 2026-06-01
+
+### Added
+- feat: iamhumans v2.6.0 — Wave 1C complete (DCI/INC/REF, 58 rules)
+
+**Install:** `npm install @nano-step/skill-manager@5.19.0`
+
+---
+
 ## [5.18.0] — 2026-06-01
 
 ### Added
