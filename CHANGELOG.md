@@ -13,6 +13,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.20.0] — 2026-06-01
+
+### Added
+- feat(iamhumans): bump to v2.6.1 — Wave 1D tuning patch
+
+**Install:** `npm install @nano-step/skill-manager@5.20.0`
+
+---
+
 ## [5.19.0] — 2026-06-01
 
 ### Added
