@@ -1,7 +1,7 @@
 {
     "name": "iamhumans",
-    "version": "2.2.0",
-    "description": "Humanization layer for LLM conversation. v2.2.0: 57 net-new culture-grounded rules across 5 cultural clusters (East Asian, MENA, African/diasporic, Latin/Latinx, SE Asian/Buddhist) from 31 sources. 238 rules total. 20 personality modules + 5 cultural affect clusters. 240-case eval corpus. Eval-verified: 99/100 PASS, 96.3/100 aggregate.",
+    "version": "2.4.0",
+    "description": "Humanization layer for LLM conversation. v2.4.0: 109 net-new rules across 9 clusters — 5 cultural + 4 life-stage — from 140 books and 30+ clinical sources. 20 core personality modules. 254-case eval corpus. 1426-line SKILL.md.",
     "compatibility": "OpenCode",
     "agent": null,
     "commands": [],
