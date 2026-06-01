@@ -11,6 +11,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.18.0] — 2026-06-01
+
+### Added
+- feat: iamhumans v2.4.0 — Wave 1B life-stage clusters (52 rules, 4 modules)
+
+**Install:** `npm install @nano-step/skill-manager@5.18.0`
+
+---
+
 ## [5.17.0] — 2026-06-01
 
 ### Added
