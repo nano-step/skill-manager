@@ -10,6 +10,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.17.0] — 2026-06-01
+
+### Added
+- feat: iamhumans v2.2.0 — Wave 1A cultural affect clusters (57 rules, 5 clusters)
+
+**Install:** `npm install @nano-step/skill-manager@5.17.0`
+
+---
+
 ## [5.16.1] — 2026-06-01
 
 ### Fixed
