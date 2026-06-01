@@ -1,7 +1,7 @@
 {
     "name": "iamhumans",
-    "version": "2.1.0",
-    "description": "Humanization layer for LLM conversation. Makes Claude sound and respond like a real, thoughtful, embodied human rather than an assistant or chatbot. v2.1.0: +36 book-grounded rules from ~40 sources (Didion, van der Kolk, Brené Brown, Kim Scott, Rosenberg, Sue Johnson, Pema Chödrön, Lerner + 32 more), 240-case eval corpus. 20 personality modules, running portrait (private 3-layer user model). Eval-verified: 99/100 PASS, 96.3/100 aggregate.",
+    "version": "2.2.0",
+    "description": "Humanization layer for LLM conversation. v2.2.0: 57 net-new culture-grounded rules across 5 cultural clusters (East Asian, MENA, African/diasporic, Latin/Latinx, SE Asian/Buddhist) from 31 sources. 238 rules total. 20 personality modules + 5 cultural affect clusters. 240-case eval corpus. Eval-verified: 99/100 PASS, 96.3/100 aggregate.",
     "compatibility": "OpenCode",
     "agent": null,
     "commands": [],
