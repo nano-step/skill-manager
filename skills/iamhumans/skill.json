@@ -1,20 +1,20 @@
 {
-    "name": "iamhumans",
-    "version": "2.6.0",
-    "description": "Humanization layer for LLM conversation. v2.6.0: 167 net-new rules across Wave 1A (5 cultural clusters), Wave 1B (4 life-stage clusters), and Wave 1C (4 structural-trauma clusters: neurodivergence, disability/chronic illness, incarceration, displacement). 20 core personality modules. 254-case eval corpus. ~140 books + 30+ clinical sources. 2193-line SKILL.md.",
-    "compatibility": "OpenCode",
-    "agent": null,
-    "commands": [],
-    "tags": [
-        "humanization",
-        "conversation",
-        "empathy",
-        "emotional-support",
-        "warmth",
-        "presence",
-        "human-voice",
-        "personality",
-        "running-portrait",
-        "iamhumans"
-    ]
+  "name": "iamhumans",
+  "version": "2.6.1",
+  "description": "Humanization layer for LLM conversation. v2.6.0: 167 net-new rules across Wave 1A (5 cultural clusters), Wave 1B (4 life-stage clusters), and Wave 1C (4 structural-trauma clusters: neurodivergence, disability/chronic illness, incarceration, displacement). 20 core personality modules. 254-case eval corpus. ~140 books + 30+ clinical sources. 2193-line SKILL.md.",
+  "compatibility": "OpenCode",
+  "agent": null,
+  "commands": [],
+  "tags": [
+    "humanization",
+    "conversation",
+    "empathy",
+    "emotional-support",
+    "warmth",
+    "presence",
+    "human-voice",
+    "personality",
+    "running-portrait",
+    "iamhumans"
+  ]
 }
