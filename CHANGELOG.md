@@ -14,6 +14,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.21.0] — 2026-06-01
+
+### Added
+- feat(iamhumans): bump to v2.7.0 — Wave 2A + Wave 2B
+
+**Install:** `npm install @nano-step/skill-manager@5.21.0`
+
+---
+
 ## [5.20.0] — 2026-06-01
 
 ### Added
