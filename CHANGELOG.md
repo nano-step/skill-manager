@@ -9,6 +9,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.16.1] — 2026-06-01
+
+### Fixed
+- fix: quote iamhumans description field in SKILL.md frontmatter (YAML parse error)
+
+**Install:** `npm install @nano-step/skill-manager@5.16.1`
+
+---
+
 ## [5.16.0] — 2026-05-31
 
 ### Added
