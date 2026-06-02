@@ -16,6 +16,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.23.0] — 2026-06-02
+
+### Added
+- feat(nano-brain): sync v2.1.1 → v3.1.0
+
+**Install:** `npm install @nano-step/skill-manager@5.23.0`
+
+---
+
 ## [5.22.0] — 2026-06-02
 
 ### Added
