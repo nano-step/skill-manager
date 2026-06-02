@@ -17,6 +17,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.24.0] — 2026-06-02
+
+### Added
+- feat(iamhumans): v2.9.0 — CON module, 26 rules, 14 sources (Wave 4)
+
+**Install:** `npm install @nano-step/skill-manager@5.24.0`
+
+---
+
 ## [5.23.0] — 2026-06-02
 
 ### Added
