@@ -1,111 +1,222 @@
 ---
 name: nano-brain
-description: Provide persistent memory and code intelligence for AI coding agents; use for hybrid search, cross-session recall, symbol analysis, and impact checks.
-compatibility: OpenCode
+description: Persistent memory + code intelligence for AI coding agents. Hybrid search (BM25 + vector + RRF), cross-session recall, symbol graph analysis, impact checks, OpenCode/Claude Code session harvesting. Use when you need to recall prior decisions, search across sessions/codebase, trace symbol callers/callees, or persist long-term context.
+compatibility: OpenCode, Claude Code, any MCP-aware agent
 metadata:
   author: nano-step
-  version: 2.1.0
+  version: 3.1.0
+  upstream: https://github.com/nano-step/nano-brain
 ---
 
 # nano-brain
 
-Provide persistent memory for AI coding agents. Run hybrid search (BM25 + semantic + LLM reranking) across past sessions, codebase, notes, and daily logs.
+Persistent memory + code-intel daemon. Agents talk to it via **MCP** (preferred) — CLI and HTTP are escape hatches for scripts and integration tests.
 
-## Slash Commands
+This file documents the MCP surface. Deeper references:
 
-| Command | When |
-|---------|------|
-| `/nano-brain-init` | Run first-time workspace setup |
-| `/nano-brain-status` | Check health, embedding progress |
-| `/nano-brain-reindex` | Run after branch switch, pull, or major changes |
+- `@references/http-api.md` — full HTTP endpoint reference (for scripts, tests, dashboards)
+- `@references/cli-cheatsheet.md` — `npx nano-brain ...` subcommand reference
+- `@references/code-intelligence.md` — symbol graph (`context`, `code-impact`, `detect-changes`)
+- `@references/config-reference.md` — daemon `config.yml` schema + env vars
 
-## When to Use Memory
+(load these only when you need them — most agent workflows live in this file.)
 
-**Before work:** Recall past decisions, patterns, debugging insights, cross-session context.
-**After work:** Save key decisions, architecture choices, non-obvious fixes, domain knowledge.
+## When to call which tool
 
-## Commands
+| You need to... | Tool | Why |
+|---|---|---|
+| Recall past work on a topic | `memory_query` | Hybrid (BM25 + vector + recency) — best default |
+| Find exact string (error msg, fn name) | `memory_search` | BM25 — fastest, no rerank |
+| Explore fuzzy concept | `memory_vsearch` | Vector only — semantic match |
+| Save a decision/lesson | `memory_write` | Persists for future sessions |
+| Catch up at session start | `memory_wake_up` | Recent docs + active collections + stats |
+| Fetch one doc by ID/path | `memory_get` | Full content + metadata |
+| Check daemon health/queue | `memory_status` | PG + embed queue + harvester |
+| Trace symbol callers/callees | `memory_graph` | 1-hop neighbors |
+| Risk-check before refactor | `memory_impact` | Reverse-impact BFS, depth 1-3 |
+| Walk call chain | `memory_trace` | Forward walk with cycle detect, depth 1-10 |
+| Find a symbol by name/kind | `memory_symbols` | Function/type/method/interface search |
+| List all tags | `memory_tags` | Tag inventory |
+| Force re-embed | `memory_update` | Re-queues workspace chunks |
 
-Use the nano-brain CLI for all memory and code intelligence operations.
+## MCP tool schemas
 
-- **`npx nano-brain search "..."`** — recall a specific error string or function name from past sessions.
-  Example: `npx nano-brain search "ECONNREFUSED redis timeout"`
-  Compact mode: `npx nano-brain search "..." --compact` — returns 1-line summaries, ~70% fewer tokens
-- **`npx nano-brain vsearch "..."`** — explore a fuzzy concept when you do not know the exact wording.
-  Example: `npx nano-brain vsearch "caching strategy for user sessions"`
-  Compact mode: `npx nano-brain vsearch "..." --compact`
-- **`npx nano-brain query "..."`** — get the best hybrid answer for a complex, multi-part question.
-  Example: `npx nano-brain query "how did we handle rate limiting in the payment service"`
-  Compact mode: `npx nano-brain query "..." --compact`
-- **`npx nano-brain write "..." --tags=...`** — log a decision or insight for future recall.
-  Example: `npx nano-brain write "## Decision: Use Redis Streams over Bull queues\n- Why: retries need ordered replay" --tags=decision`
-- **`npx nano-brain status`** — verify health or embedding progress before searching.
-  Example: `npx nano-brain status`
-- **`npx nano-brain reindex`** — refresh all indexes after big changes or repo syncs. **ALWAYS use `workdir` parameter** — `--root` flag is silently ignored and reindexes CWD instead.
-  ✅ Correct: `bash(command="npx nano-brain reindex", workdir="/path/to/workspace")`
-  ❌ Wrong: `npx nano-brain reindex --root=/path/to/workspace`
-- **`npx nano-brain focus <filepath>`** — inspect dependencies for a specific file you are editing.
-  Example: `npx nano-brain focus /src/api/routes/auth.ts`
-- **`npx nano-brain graph-stats`** — check dependency graph size and coverage.
-  Example: `npx nano-brain graph-stats`
-- **`npx nano-brain symbols --type=... --pattern=...`** — find where cross-repo infrastructure symbols are defined or used.
-  Example: `npx nano-brain symbols --type=redis_key --pattern="session:*"`
-- **`npx nano-brain impact --type=... --pattern=...`** — see which repos or services are affected by a symbol.
-  Example: `npx nano-brain impact --type=mysql_table --pattern=orders`
-- **`npx nano-brain tags`** — list all tags to see what is tracked.
-  Example: `npx nano-brain tags`
+Connect: streamable HTTP at `/mcp` on the daemon. Container agents use `http://host.docker.internal:3100/mcp`.
 
-## Token-Saving: Compact Search Flow (CCR)
+Every tool takes a `workspace` string (the SHA-256 hash returned by `POST /api/v1/init`). Listed required fields are in the `required` array of the InputSchema.
 
-For large result sets, use **compact mode** to save ~70% tokens. Compact returns 1-line summaries per result; expand the ones you need.
+### memory_query — hybrid search (DEFAULT)
+```
+required: workspace, query
+optional: max_results (int, default 10, capped at 100)
+returns:  {results: [{id, title, snippet, score, tags, collection, source_path, workspace_hash, document_id, created_at, updated_at}], total, query_ms}
+```
+Source: `internal/mcp/tools.go:161-195`, `internal/search/search.go:35-67`.
 
-**CLI flow:**
-```bash
-npx nano-brain query "auth middleware" --compact
+### memory_search — BM25 keyword
+```
+required: workspace, query
+optional: max_results (capped 100), tags (array of strings — AND filter)
+returns:  same shape as memory_query
+```
+Source: `internal/mcp/tools.go:198-321`. Note: tags filter is conjunctive (chunk must have ALL listed tags).
+
+### memory_vsearch — vector semantic
+```
+required: workspace, query
+optional: max_results (capped 100)
+returns:  same shape as memory_query
+```
+Source: `internal/mcp/tools.go:323-415`. Slower than BM25 (embedding round-trip); best for "concept similar to…" queries where exact words don't match.
+
+### memory_get — fetch one doc
+```
+required: workspace, path
+optional: start_line (1-indexed inclusive), end_line (1-indexed inclusive)
+path:     either source_path (e.g. memory://foo/bar) OR #<uuid> form
+returns:  {id, title, content, source_path, collection, tags, workspace_hash, supersedes_id?, created_at, updated_at}
+```
+Source: `internal/mcp/tools.go:417-506`, `internal/server/handlers/get_document.go:21-37`. Use `start_line`/`end_line` for huge docs to avoid loading megabytes.
+
+### memory_write — persist a decision
+```
+required: workspace (must be registered via /api/v1/init — workspace="all" is REJECTED, issue #238), content (max 5MB)
+optional: title, tags (array), collection (default "memory"), source_path, metadata (object), supersedes (#<uuid> or source_path of doc this replaces)
+returns:  {id, hash, collection, workspace_hash, chunk_count, warning?}
+```
+Source: `internal/mcp/tools.go:508-680`. Tags convention: `decision`, `lesson`, `summary`, `bug`, `gotcha`, plus an area tag (`auth`, `queue`, etc.). Same `source_path` upserts (replaces) the existing doc.
+
+### memory_wake_up — session-start briefing
+```
+required: workspace
+optional: limit (default 10, capped 50)
+returns:  {summary, recent_memories: [{id, title, snippet, tags, date}], active_collections: [{name, document_count, last_updated}], stats: {total_documents, total_chunks, last_activity}}
+```
+Source: `internal/mcp/tools.go:791-914`, `internal/server/handlers/wakeup.go:22-52`. Call first thing after registering a workspace; the `summary` field gives the agent a one-paragraph orientation.
+
+### memory_status — daemon health
+```
+required: (none)
+returns:  {pg_status, migration_version, embedding_queue_depth, active_provider, workspace_count, queue_depth, queue_capacity, queue_status, queue_pending, harvester_status: {...}}
+```
+Source: `internal/mcp/tools.go:731-763`, `internal/server/handlers/health.go:111-122`. Check `queue_pending` if `memory_search` returns nothing — chunks may still be embedding.
+
+### memory_graph — 1-hop symbol neighbors
+```
+required: workspace, node ("/abs/path.go" OR "/abs/path.go::FunctionName")
+optional: direction ("out" | "in" | "both", default "out"), edge_type ("calls" | "imports" | "contains" | empty for all)
+returns:  {node, direction, edges: [{source, target, edge_type}]}
+```
+Source: `internal/mcp/tools.go:916-1007`. Requires prior `reindex` to populate the graph.
+
+### memory_impact — reverse impact BFS
+```
+required: workspace, node
+optional: edge_type, max_depth (1-3, server-clamped, default 1)
+returns:  {node, impacted: [{node, depth, edge_type}]}
+```
+Source: `internal/mcp/tools.go:1087-1157`. Use before refactor — `impacted` is the set of nodes that would break if `node` changes.
+
+### memory_trace — forward call chain
+```
+required: workspace, node
+optional: max_depth (1-10, server-clamped, default 5)
+returns:  {entry, chain: [{node, depth, via}]}
+```
+Source: `internal/mcp/tools.go:1009-1085`. Walks outgoing edges with cycle detection. Use to understand "what does this entry point eventually call?".
+
+### memory_symbols — symbol search
+```
+required: workspace
+optional: query (substring filter), kind ("function" | "method" | "type" | "interface" | "struct" | "const" | "var"), limit (default 50, capped 200)
+returns:  {symbols: [{name, kind, language, signature, source_path}], count}
+```
+Source: `internal/mcp/tools.go:1159-1223`.
+
+### memory_tags — tag inventory
+```
+required: workspace
+returns:  array of tag/collection summaries (see tool schema)
+```
+Source: `internal/mcp/tools.go:682-729`.
+
+### memory_update — force re-embed
+```
+required: workspace (must be registered)
+returns:  count of chunks re-queued
+```
+Source: `internal/mcp/tools.go:765-789`. Rare — only useful after switching embedding model or fixing corrupt embeddings.
+
+## Recipes
+
+### R1 — Session start
+```
+1. memory_wake_up(workspace, limit=8)      // briefing + recent docs
+2. memory_query(workspace, query="<task topic>")  // anything we learned about this?
+```
+Costs ~500 tokens; saves much more by preventing redundant exploration.
+
+### R2 — Recall before grep
+nano-brain finds matches in past sessions, prior commits, docs. Grep finds matches in current files. Always recall first (cheap, ~200 tokens) then grep for exact code locations.
+
+| Need | Call |
+|---|---|
+| "Did we hit this error before?" | `memory_search("ECONNREFUSED redis")` |
+| "How did we handle rate limiting?" | `memory_vsearch("rate limiting strategy")` |
+| "What did we decide about X?" | `memory_query("X decision")` |
+
+### R3 — Pre-refactor impact check
+```
+memory_impact(workspace, node="/path/file.go::Symbol", edge_type="calls", max_depth=2)
+```
+Read the `impacted` array — count > 10 means HIGH risk, treat as "needs review."
+
+### R4 — Persist a decision (end of session)
+```
+memory_write(
+  workspace,
+  content="## Decision: …\n- Why: …\n- Trade-off: …\n- Files: …",
+  tags=["decision", "architecture", "<area>"],
+  collection="memory"
+)
+```
+Tags are how future-you filters. Be consistent: `decision`, `lesson`, `summary`, `bug`, `gotcha`, plus an area.
+
+### R5 — Triage many results
+For broad queries with 10+ hits, scan via low max_results first, then expand the relevant ones:
+```
+1. memory_query(workspace, query="…", max_results=5)  // top hits only
+2. memory_get(workspace, path="#<uuid-from-top-hit>")  // full content of the chosen one
 ```
 
-**When to use compact:**
-- Triage/scanning many results before reading details
-- Context window is tight and you need to be selective
-- Searching broad topics where most results won't be relevant
+### R6 — Cross-workspace recall
+There is no `workspace="all"` for write paths (rejected for safety per #238). For READ paths, switch workspaces in a loop:
+```
+for ws in $registered_workspaces:
+  memory_query(workspace=ws, query="<topic>")
+```
+Or use HTTP `GET /api/v1/workspaces` to list hashes, then iterate.
 
-**When to use verbose (default):**
-- You need full content from all results
-- Small result sets (< 5 results)
-- Precise queries where every result matters
+## Common errors
 
-## Collection Filtering
+| Symptom | Cause | Fix |
+|---|---|---|
+| `cannot connect to daemon` | nano-brain not running | On host: `npx @nano-step/nano-brain@latest serve -d` |
+| `workspace_not_found` (HTTP 404) | Workspace hash not in DB (#309 fix) | `POST /api/v1/init {root_path: …}` first |
+| `workspace_required` (HTTP 400) | Empty workspace field | Always pass `workspace` arg/body field |
+| `memory_search` returns 0 | Embedding queue still working | Check `memory_status.queue_pending`; new docs need embed before vector search hits them. BM25 lands immediately. |
+| `chunk truncated before embedding` warns flood log (pre-v2026.6.0202) | Chunker emitted oversize chunks | Upgrade ≥v2026.6.0202 — #297 + #300 align chunker default with embed budget |
+| Title-only query returns 0 (pre-v2026.6.0201) | BM25 indexed only chunk content | Upgrade ≥v2026.6.0201 — migration 13 adds title to tsvector (#305) |
+| `memory_query` returns score=0 + empty title (pre-v2026.6.0107) | MCP serialization missing JSON tags | Upgrade ≥v2026.6.0107 — #303 added snake_case tags to search.Result |
+| New workspace registered but not indexing (pre-v2026.6.0108) | File watcher loaded list once at startup | Upgrade ≥v2026.6.0108 — #308 wires hot-register signal |
 
-Works with CLI (`-c` flag):
+## Connection details (rare — most MCP clients handle this for you)
 
-- `codebase` — source files only
-- `sessions` — past AI sessions only
-- `memory` — curated notes only
-- Omit — search everything (recommended)
+| Layer | URL | When |
+|---|---|---|
+| MCP (default) | `http://host.docker.internal:3100/mcp` from container, `http://localhost:3100/mcp` from host | Agent tools |
+| HTTP API | Same host, no `/mcp` suffix | See `@references/http-api.md` |
+| CLI | wraps HTTP | See `@references/cli-cheatsheet.md` |
 
-## Code Intelligence Tools (CLI)
+For HTTP/CLI/config deep dives: load the matching `@references/` file.
 
-Use symbol-level analysis powered by Tree-sitter AST parsing. Require codebase indexing.
-
-- **`npx nano-brain context <name>`** — trace callers, callees, and flows around a symbol.
-  Example: `npx nano-brain context processPayment`
-- **`npx nano-brain code-impact <name> --direction=...`** — evaluate upstream or downstream risk before refactors.
-  Example: `npx nano-brain code-impact DatabaseClient --direction=upstream`
-- **`npx nano-brain detect-changes --scope=...`** — map current git diffs to symbols and flows.
-  Example: `npx nano-brain detect-changes --scope=all`
-
-**Details and examples:** `references/code-intelligence.md`
-
-## Memory vs Native Tools
-
-| Use case | Tool |
-|----------|------|
-| Recall past decisions or context | `npx nano-brain query "..."` |
-| Find exact strings or patterns in code | grep / ast-grep |
-| Trace callers/callees or impact | `npx nano-brain context <name>` / `npx nano-brain code-impact <name> --direction=...` |
-
-Memory excels at **recall and semantics** — past sessions, conceptual search, cross-project knowledge.
-Native tools (grep, ast-grep, glob) excel at **precise code patterns** — exact matches, AST structure.
-Code intelligence tools excel at **structural relationships** — call graphs, impact analysis, flow detection.
-
-**They are complementary.** Use all three.
