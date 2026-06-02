@@ -15,6 +15,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+
+## [5.22.0] — 2026-06-02
+
+### Added
+- feat(iamhumans): v2.8.0 — ATT module, 55 rules, 49 eval cases (TC-353–TC-401)
+
+**Install:** `npm install @nano-step/skill-manager@5.22.0`
+
+---
+
 ## [5.21.0] — 2026-06-01
 
 ### Added
