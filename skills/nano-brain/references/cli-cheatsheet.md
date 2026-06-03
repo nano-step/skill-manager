@@ -83,6 +83,34 @@ bash(command="npx nano-brain reindex", workdir="/path/to/workspace")  # client p
 | `npx nano-brain version` | — | Print version |
 | `npx nano-brain help` | — | Print top-level help |
 
+## Diagnostics
+
+| Command | Flags | Notes |
+|---|---|---|
+| `nano-brain version --which` | `--json` | Print resolved binary path, version, and invocation source (`npm-local`, `npm-global`, `dev-build`, `path`, `env-override`) |
+| `nano-brain mcp-url` | (none) | Print resolved MCP URL — precedence: `NANO_BRAIN_MCP_URL` env → `/.dockerenv` detection → `localhost:3100` |
+| `nano-brain doctor` | `--json` | Offline prerequisite checks (config, PostgreSQL, pgvector, Ollama, embedding model, binary exists) |
+| `nano-brain doctor --online` | `--json` | All offline checks + runtime: server reachable, embed queue health (WARN ≥ 80%, FAIL ≥ 95%), CLI↔server version skew, MCP endpoint reachable |
+
+**Quick health check workflow:**
+```bash
+nano-brain version --which    # confirm which binary is running
+nano-brain mcp-url            # confirm MCP URL for your environment
+nano-brain doctor --online    # full health report
+```
+
+**CI-friendly (JSON + exit code):**
+```bash
+nano-brain doctor --online --json | jq '.all_passed'
+# exit 0 if all pass, exit 1 if any fail
+```
+
+**Override binary:**
+```bash
+NANO_BRAIN_BIN=/custom/nano-brain nano-brain version --which
+# NANO_BRAIN_BIN is validated: file must exist and be executable
+```
+
 ## Recipes (CLI form)
 
 ### Session start

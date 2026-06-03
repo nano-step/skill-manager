@@ -4,7 +4,7 @@ description: Persistent memory + code intelligence for AI coding agents. Hybrid 
 compatibility: OpenCode, Claude Code, any MCP-aware agent
 metadata:
   author: nano-step
-  version: 3.1.0
+  version: 3.2.0
   upstream: https://github.com/nano-step/nano-brain
 ---
 
@@ -15,7 +15,7 @@ Persistent memory + code-intel daemon. Agents talk to it via **MCP** (preferred)
 This file documents the MCP surface. Deeper references:
 
 - `@references/http-api.md` — full HTTP endpoint reference (for scripts, tests, dashboards)
-- `@references/cli-cheatsheet.md` — `npx nano-brain ...` subcommand reference
+- `@references/cli-cheatsheet.md` — CLI subcommand reference (incl. `version --which`, `mcp-url`, `doctor --online`)
 - `@references/code-intelligence.md` — symbol graph (`context`, `code-impact`, `detect-changes`)
 - `@references/config-reference.md` — daemon `config.yml` schema + env vars
 
@@ -201,7 +201,7 @@ Or use HTTP `GET /api/v1/workspaces` to list hashes, then iterate.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `cannot connect to daemon` | nano-brain not running | On host: `npx @nano-step/nano-brain@latest serve -d` |
+| `cannot connect to daemon` | nano-brain not running | On host: `nano-brain serve -d` (global install) or `npx @nano-step/nano-brain@latest serve -d` (npx fallback) |
 | `workspace_not_found` (HTTP 404) | Workspace hash not in DB (#309 fix) | `POST /api/v1/init {root_path: …}` first |
 | `workspace_required` (HTTP 400) | Empty workspace field | Always pass `workspace` arg/body field |
 | `memory_search` returns 0 | Embedding queue still working | Check `memory_status.queue_pending`; new docs need embed before vector search hits them. BM25 lands immediately. |
@@ -209,6 +209,23 @@ Or use HTTP `GET /api/v1/workspaces` to list hashes, then iterate.
 | Title-only query returns 0 (pre-v2026.6.0201) | BM25 indexed only chunk content | Upgrade ≥v2026.6.0201 — migration 13 adds title to tsvector (#305) |
 | `memory_query` returns score=0 + empty title (pre-v2026.6.0107) | MCP serialization missing JSON tags | Upgrade ≥v2026.6.0107 — #303 added snake_case tags to search.Result |
 | New workspace registered but not indexing (pre-v2026.6.0108) | File watcher loaded list once at startup | Upgrade ≥v2026.6.0108 — #308 wires hot-register signal |
+
+## Starting the daemon
+
+**Fastest (global install, no cold-start overhead):**
+```bash
+npm install -g @nano-step/nano-brain
+nano-brain serve -d
+```
+
+**Fallback (npx, ~600ms–1.5s cold-start per invocation):**
+```bash
+npx @nano-step/nano-brain@latest serve -d
+```
+
+**MCP URL** — set `NANO_BRAIN_MCP_URL` to override the resolved URL:
+- Container agents (default): `http://host.docker.internal:3100/mcp`
+- Bare-metal / host agents: `http://localhost:3100/mcp`
 
 ## Connection details (rare — most MCP clients handle this for you)
 
@@ -219,4 +236,15 @@ Or use HTTP `GET /api/v1/workspaces` to list hashes, then iterate.
 | CLI | wraps HTTP | See `@references/cli-cheatsheet.md` |
 
 For HTTP/CLI/config deep dives: load the matching `@references/` file.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `sha256sum mismatch` during `npm install` | Set `NANO_BRAIN_SKIP_SHA_VERIFY=1` for air-gapped / corp-proxy installs (a WARN is printed) |
+| Permission denied on global install | Use `npm install -g --prefix ~/.local @nano-step/nano-brain` then add `~/.local/bin` to `PATH` |
+| macOS Gatekeeper blocks binary | Run `xattr -dr com.apple.quarantine ~/.local/bin/nano-brain` (or wherever binary landed) |
+| MCP URL wrong in container | Export `NANO_BRAIN_MCP_URL=http://host.docker.internal:3100/mcp` before starting agent |
+| MCP URL wrong on bare-metal | Export `NANO_BRAIN_MCP_URL=http://localhost:3100/mcp` |
+| Wrong binary resolving (npx vs global) | Set `NANO_BRAIN_BIN=/absolute/path/to/nano-brain` to pin the binary explicitly |
 
