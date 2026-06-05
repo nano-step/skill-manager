@@ -1,28 +1,29 @@
 {
-    "name": "nano-brain",
-    "version": "3.2.0",
-    "description": "Persistent memory + code intelligence for AI coding agents. Hybrid search (BM25 + vector + LLM rerank), cross-session recall, symbol analysis, impact checks, OpenCode/Claude Code session harvesting. Use this skill when you need to recall prior decisions, search across sessions/codebase, trace symbol callers/callees, or persist long-term context.",
-    "compatibility": "OpenCode, Claude Code, any MCP-aware agent",
-    "agent": null,
-    "commands": [],
-    "mcp": {
-        "nano-brain": {
-            "type": "remote",
-            "url": "{env:NANO_BRAIN_MCP_URL}",
-            "enabled": true
-        }
-    },
-    "tags": [
-        "memory",
-        "persistence",
-        "search",
-        "context",
-        "sessions",
-        "code-intelligence",
-        "symbol-analysis",
-        "impact-analysis",
-        "mcp",
-        "http-api",
-        "harvest"
-    ]
+  "name": "nano-brain",
+  "version": "5.0.0",
+  "description": "Persistent memory + code intelligence for AI coding agents. Guides effective use of nano-brain MCP tools — when to query vs grep, what's worth persisting, how to structure lessons and decisions for future retrieval, impact/dependency analysis before refactors, and cross-session context retrieval. Use this skill whenever you need to: recall past decisions or context from prior sessions, save non-obvious debugging insights or architectural decisions, assess refactoring risk via impact analysis or call chain tracing, catch up on work someone else started, get a session-start briefing on current project state, check if an approach was tried before and abandoned, find what functions call or depend on a symbol, or decide whether something belongs in memory vs code comments.",
+  "compatibility": "OpenCode, Claude Code, any MCP-aware agent",
+  "agent": null,
+  "commands": [],
+  "mcp": {
+    "nano-brain": {
+      "type": "remote",
+      "url": "{env:NANO_BRAIN_MCP_URL}",
+      "enabled": true
+    }
+  },
+  "tags": [
+    "memory",
+    "persistence",
+    "search",
+    "context",
+    "sessions",
+    "code-intelligence",
+    "symbol-analysis",
+    "impact-analysis",
+    "mcp",
+    "judgment",
+    "cross-session",
+    "recall"
+  ]
 }

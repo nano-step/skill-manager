@@ -1,250 +1,192 @@
 ---
 name: nano-brain
-description: Persistent memory + code intelligence for AI coding agents. Hybrid search (BM25 + vector + RRF), cross-session recall, symbol graph analysis, impact checks, OpenCode/Claude Code session harvesting. Use when you need to recall prior decisions, search across sessions/codebase, trace symbol callers/callees, or persist long-term context.
+description: >
+  Persistent memory + code intelligence for AI coding agents. Guides effective
+  use of nano-brain MCP tools — when to query vs grep, what's worth persisting,
+  how to structure lessons and decisions for future retrieval, impact/dependency
+  analysis before refactors, and cross-session context retrieval. Use this skill
+  whenever you need to: recall past decisions or context from prior sessions,
+  save non-obvious debugging insights or architectural decisions, assess
+  refactoring risk via impact analysis or call chain tracing, catch up on work
+  someone else started, get a session-start briefing on current project state,
+  check if an approach was tried before and abandoned, find what functions call
+  or depend on a symbol, or decide whether something belongs in memory vs code
+  comments. Also triggers on: "have we done this before?", "what did we decide
+  about X?", "what breaks if I change Y?", "what calls this function?", "who
+  depends on this?", "save this for later", "don't forget this", "get me up to
+  speed", "where did we leave off?", "morning briefing", "session start", or
+  any cross-session knowledge need. Even if unsure whether relevant memory
+  exists, query first — it costs ~200 tokens and often prevents hours of
+  redundant rediscovery.
 compatibility: OpenCode, Claude Code, any MCP-aware agent
 metadata:
   author: nano-step
-  version: 3.2.0
+  version: 5.0.0
   upstream: https://github.com/nano-step/nano-brain
 ---
 
-# nano-brain
+# nano-brain — Memory Judgment Guide
 
-Persistent memory + code-intel daemon. Agents talk to it via **MCP** (preferred) — CLI and HTTP are escape hatches for scripts and integration tests.
+This skill teaches you **when and how** to use nano-brain well — the judgment calls that separate useful memory from noise. Tool schemas and connection details live in AGENTS.md and `@references/`.
 
-This file documents the MCP surface. Deeper references:
+## The Iron Law
 
-- `@references/http-api.md` — full HTTP endpoint reference (for scripts, tests, dashboards)
-- `@references/cli-cheatsheet.md` — CLI subcommand reference (incl. `version --which`, `mcp-url`, `doctor --online`)
-- `@references/code-intelligence.md` — symbol graph (`context`, `code-impact`, `detect-changes`)
-- `@references/config-reference.md` — daemon `config.yml` schema + env vars
+**QUERY BEFORE BELIEVING YOU KNOW.**
 
-(load these only when you need them — most agent workflows live in this file.)
+If you haven't called `memory_query` before starting work, you're blind to prior context. Even if "sure" something hasn't been done before — verify. Cost: ~200 tokens. Saves: hours of redundant work or contradicting prior decisions.
 
-## When to call which tool
+## Quick Decision Tree
 
-| You need to... | Tool | Why |
+```
+WHAT DO YOU NEED?
+│
+├─ "Have we done X before?" / "What was decided?"
+│  └─ memory_query(query="<topic>")
+│
+├─ "What breaks if I change X?"
+│  └─ memory_impact(node="<file>::<Symbol>", max_depth=2)
+│
+├─ "Who calls this function?" / "What does this call?"
+│  └─ memory_graph(node="<file>::<Symbol>", direction="in"|"out")
+│
+├─ "Trace the full call chain from this entry point"
+│  └─ memory_trace(node="<file>::<Symbol>")
+│
+├─ "Find exact error/function name in past sessions"
+│  └─ memory_search(query="<exact string>")
+│
+├─ "Fuzzy concept — can't remember exact words"
+│  └─ memory_vsearch(query="<describe the concept>")
+│
+├─ "Starting fresh — brief me"
+│  └─ memory_wake_up(workspace=<ws>, limit=8)
+│
+└─ "I need CURRENT source code / type info"
+   └─ DON'T use memory. Use grep / LSP / read instead.
+```
+
+## Session Discipline (do this every time)
+
+```
+START:  memory_wake_up → memory_query("<today's task>")
+END:    memory_write(decisions, lessons, gotchas)
+```
+
+Most agents fail at END. The heuristic: **if you spent >30min on something, or the fix surprised you, or grep wouldn't find the cause — save it.**
+
+## What's Worth Saving
+
+| Category | Save when... | Example |
 |---|---|---|
-| Recall past work on a topic | `memory_query` | Hybrid (BM25 + vector + recency) — best default |
-| Find exact string (error msg, fn name) | `memory_search` | BM25 — fastest, no rerank |
-| Explore fuzzy concept | `memory_vsearch` | Vector only — semantic match |
-| Save a decision/lesson | `memory_write` | Persists for future sessions |
-| Catch up at session start | `memory_wake_up` | Recent docs + active collections + stats |
-| Fetch one doc by ID/path | `memory_get` | Full content + metadata |
-| Check daemon health/queue | `memory_status` | PG + embed queue + harvester |
-| Trace symbol callers/callees | `memory_graph` | 1-hop neighbors |
-| Risk-check before refactor | `memory_impact` | Reverse-impact BFS, depth 1-3 |
-| Walk call chain | `memory_trace` | Forward walk with cycle detect, depth 1-10 |
-| Find a symbol by name/kind | `memory_symbols` | Function/type/method/interface search |
-| List all tags | `memory_tags` | Tag inventory |
-| Force re-embed | `memory_update` | Re-queues workspace chunks |
+| **Decisions** | You chose between options and might forget why | "Chose RRF k=60 — k=30 had poor recall on multi-word queries" |
+| **Bug fixes** | Debugging took >30min OR root cause was non-obvious | "Race condition: worker used background ctx instead of parent" |
+| **Abandoned approaches** | You tried something and it failed — prevents retry | "Redis caching for embeddings: latency worse due to serialization" |
+| **Gotchas** | Unexpected behavior that isn't documented anywhere | "pgvector HNSW needs 100+ rows before index activates" |
+| **Constraints** | Non-obvious system interactions | "Can't use pgbouncer transaction mode + prepared statements" |
 
-## MCP tool schemas
+**DON'T save:** file contents (watcher does this), trivial facts in code comments, temporary debug observations, things that'll change next sprint.
 
-Connect: streamable HTTP at `/mcp` on the daemon. Container agents use `http://host.docker.internal:3100/mcp`.
+### Structuring saved content
 
-Every tool takes a `workspace` string (the SHA-256 hash returned by `POST /api/v1/init`). Listed required fields are in the `required` array of the InputSchema.
-
-### memory_query — hybrid search (DEFAULT)
-```
-required: workspace, query
-optional: max_results (int, default 10, capped at 100)
-returns:  {results: [{id, title, snippet, score, tags, collection, source_path, workspace_hash, document_id, created_at, updated_at}], total, query_ms}
-```
-Source: `internal/mcp/tools.go:161-195`, `internal/search/search.go:35-67`.
-
-### memory_search — BM25 keyword
-```
-required: workspace, query
-optional: max_results (capped 100), tags (array of strings — AND filter)
-returns:  same shape as memory_query
-```
-Source: `internal/mcp/tools.go:198-321`. Note: tags filter is conjunctive (chunk must have ALL listed tags).
-
-### memory_vsearch — vector semantic
-```
-required: workspace, query
-optional: max_results (capped 100)
-returns:  same shape as memory_query
-```
-Source: `internal/mcp/tools.go:323-415`. Slower than BM25 (embedding round-trip); best for "concept similar to…" queries where exact words don't match.
-
-### memory_get — fetch one doc
-```
-required: workspace, path
-optional: start_line (1-indexed inclusive), end_line (1-indexed inclusive)
-path:     either source_path (e.g. memory://foo/bar) OR #<uuid> form
-returns:  {id, title, content, source_path, collection, tags, workspace_hash, supersedes_id?, created_at, updated_at}
-```
-Source: `internal/mcp/tools.go:417-506`, `internal/server/handlers/get_document.go:21-37`. Use `start_line`/`end_line` for huge docs to avoid loading megabytes.
-
-### memory_write — persist a decision
-```
-required: workspace (must be registered via /api/v1/init — workspace="all" is REJECTED, issue #238), content (max 5MB)
-optional: title, tags (array), collection (default "memory"), source_path, metadata (object), supersedes (#<uuid> or source_path of doc this replaces)
-returns:  {id, hash, collection, workspace_hash, chunk_count, warning?}
-```
-Source: `internal/mcp/tools.go:508-680`. Tags convention: `decision`, `lesson`, `summary`, `bug`, `gotcha`, plus an area tag (`auth`, `queue`, etc.). Same `source_path` upserts (replaces) the existing doc.
-
-### memory_wake_up — session-start briefing
-```
-required: workspace
-optional: limit (default 10, capped 50)
-returns:  {summary, recent_memories: [{id, title, snippet, tags, date}], active_collections: [{name, document_count, last_updated}], stats: {total_documents, total_chunks, last_activity}}
-```
-Source: `internal/mcp/tools.go:791-914`, `internal/server/handlers/wakeup.go:22-52`. Call first thing after registering a workspace; the `summary` field gives the agent a one-paragraph orientation.
-
-### memory_status — daemon health
-```
-required: (none)
-returns:  {pg_status, migration_version, embedding_queue_depth, active_provider, workspace_count, queue_depth, queue_capacity, queue_status, queue_pending, harvester_status: {...}}
-```
-Source: `internal/mcp/tools.go:731-763`, `internal/server/handlers/health.go:111-122`. Check `queue_pending` if `memory_search` returns nothing — chunks may still be embedding.
-
-### memory_graph — 1-hop symbol neighbors
-```
-required: workspace, node ("/abs/path.go" OR "/abs/path.go::FunctionName")
-optional: direction ("out" | "in" | "both", default "out"), edge_type ("calls" | "imports" | "contains" | empty for all)
-returns:  {node, direction, edges: [{source, target, edge_type}]}
-```
-Source: `internal/mcp/tools.go:916-1007`. Requires prior `reindex` to populate the graph.
-
-### memory_impact — reverse impact BFS
-```
-required: workspace, node
-optional: edge_type, max_depth (1-3, server-clamped, default 1)
-returns:  {node, impacted: [{node, depth, edge_type}]}
-```
-Source: `internal/mcp/tools.go:1087-1157`. Use before refactor — `impacted` is the set of nodes that would break if `node` changes.
-
-### memory_trace — forward call chain
-```
-required: workspace, node
-optional: max_depth (1-10, server-clamped, default 5)
-returns:  {entry, chain: [{node, depth, via}]}
-```
-Source: `internal/mcp/tools.go:1009-1085`. Walks outgoing edges with cycle detection. Use to understand "what does this entry point eventually call?".
-
-### memory_symbols — symbol search
-```
-required: workspace
-optional: query (substring filter), kind ("function" | "method" | "type" | "interface" | "struct" | "const" | "var"), limit (default 50, capped 200)
-returns:  {symbols: [{name, kind, language, signature, source_path}], count}
-```
-Source: `internal/mcp/tools.go:1159-1223`.
-
-### memory_tags — tag inventory
-```
-required: workspace
-returns:  array of tag/collection summaries (see tool schema)
-```
-Source: `internal/mcp/tools.go:682-729`.
-
-### memory_update — force re-embed
-```
-required: workspace (must be registered)
-returns:  count of chunks re-queued
-```
-Source: `internal/mcp/tools.go:765-789`. Rare — only useful after switching embedding model or fixing corrupt embeddings.
-
-## Recipes
-
-### R1 — Session start
-```
-1. memory_wake_up(workspace, limit=8)      // briefing + recent docs
-2. memory_query(workspace, query="<task topic>")  // anything we learned about this?
-```
-Costs ~500 tokens; saves much more by preventing redundant exploration.
-
-### R2 — Recall before grep
-nano-brain finds matches in past sessions, prior commits, docs. Grep finds matches in current files. Always recall first (cheap, ~200 tokens) then grep for exact code locations.
-
-| Need | Call |
-|---|---|
-| "Did we hit this error before?" | `memory_search("ECONNREFUSED redis")` |
-| "How did we handle rate limiting?" | `memory_vsearch("rate limiting strategy")` |
-| "What did we decide about X?" | `memory_query("X decision")` |
-
-### R3 — Pre-refactor impact check
-```
-memory_impact(workspace, node="/path/file.go::Symbol", edge_type="calls", max_depth=2)
-```
-Read the `impacted` array — count > 10 means HIGH risk, treat as "needs review."
-
-### R4 — Persist a decision (end of session)
 ```
 memory_write(
-  workspace,
-  content="## Decision: …\n- Why: …\n- Trade-off: …\n- Files: …",
-  tags=["decision", "architecture", "<area>"],
-  collection="memory"
+  workspace=<ws>,
+  content="## Decision: [clear title]\n\n**Context:** ...\n**Choice:** ...\n**Why:** [MOST IMPORTANT]\n**Trade-off:** ...\n**Files:** ...",
+  tags=["decision", "<area>"],
+  source_path="memory://decisions/<slug>"  // enables idempotent upsert
 )
 ```
-Tags are how future-you filters. Be consistent: `decision`, `lesson`, `summary`, `bug`, `gotcha`, plus an area.
 
-### R5 — Triage many results
-For broad queries with 10+ hits, scan via low max_results first, then expand the relevant ones:
-```
-1. memory_query(workspace, query="…", max_results=5)  // top hits only
-2. memory_get(workspace, path="#<uuid-from-top-hit>")  // full content of the chosen one
-```
+### Tag conventions
 
-### R6 — Cross-workspace recall
-There is no `workspace="all"` for write paths (rejected for safety per #238). For READ paths, switch workspaces in a loop:
-```
-for ws in $registered_workspaces:
-  memory_query(workspace=ws, query="<topic>")
-```
-Or use HTTP `GET /api/v1/workspaces` to list hashes, then iterate.
+Before tagging, call `memory_tags(workspace)` to check existing conventions.
 
-## Common errors
+- **Category** (pick one): `decision`, `lesson`, `bug`, `gotcha`, `abandoned`, `summary`
+- **Area** (pick one+): project-specific, e.g. `auth`, `search`, `embed`, `api`, `config`
+- Adopt majority conventions from `memory_tags` — don't introduce "authentication" if "auth" already has 20 docs
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `cannot connect to daemon` | nano-brain not running | On host: `nano-brain serve -d` (global install) or `npx @nano-step/nano-brain@latest serve -d` (npx fallback) |
-| `workspace_not_found` (HTTP 404) | Workspace hash not in DB (#309 fix) | `POST /api/v1/init {root_path: …}` first |
-| `workspace_required` (HTTP 400) | Empty workspace field | Always pass `workspace` arg/body field |
-| `memory_search` returns 0 | Embedding queue still working | Check `memory_status.queue_pending`; new docs need embed before vector search hits them. BM25 lands immediately. |
-| `chunk truncated before embedding` warns flood log (pre-v2026.6.0202) | Chunker emitted oversize chunks | Upgrade ≥v2026.6.0202 — #297 + #300 align chunker default with embed budget |
-| Title-only query returns 0 (pre-v2026.6.0201) | BM25 indexed only chunk content | Upgrade ≥v2026.6.0201 — migration 13 adds title to tsvector (#305) |
-| `memory_query` returns score=0 + empty title (pre-v2026.6.0107) | MCP serialization missing JSON tags | Upgrade ≥v2026.6.0107 — #303 added snake_case tags to search.Result |
-| New workspace registered but not indexing (pre-v2026.6.0108) | File watcher loaded list once at startup | Upgrade ≥v2026.6.0108 — #308 wires hot-register signal |
+### Checklist: after memory_write
 
-## Starting the daemon
+- [ ] Tags include category AND area
+- [ ] Content has clear **Why** (not just "chose X")
+- [ ] If reversing prior decision: added `supersedes="#<old-uuid>"`
+- [ ] Verifiable: `memory_search(query="<key phrase>")` finds it (BM25 works instantly)
 
-**Fastest (global install, no cold-start overhead):**
-```bash
-npm install -g @nano-step/nano-brain
-nano-brain serve -d
-```
+## Updating and Superseding
 
-**Fallback (npx, ~600ms–1.5s cold-start per invocation):**
-```bash
-npx @nano-step/nano-brain@latest serve -d
-```
-
-**MCP URL** — set `NANO_BRAIN_MCP_URL` to override the resolved URL:
-- Container agents (default): `http://host.docker.internal:3100/mcp`
-- Bare-metal / host agents: `http://localhost:3100/mcp`
-
-## Connection details (rare — most MCP clients handle this for you)
-
-| Layer | URL | When |
-|---|---|---|
-| MCP (default) | `http://host.docker.internal:3100/mcp` from container, `http://localhost:3100/mcp` from host | Agent tools |
-| HTTP API | Same host, no `/mcp` suffix | See `@references/http-api.md` |
-| CLI | wraps HTTP | See `@references/cli-cheatsheet.md` |
-
-For HTTP/CLI/config deep dives: load the matching `@references/` file.
-
-## Troubleshooting
-
-| Symptom | Fix |
+| Situation | Action |
 |---|---|
-| `sha256sum mismatch` during `npm install` | Set `NANO_BRAIN_SKIP_SHA_VERIFY=1` for air-gapped / corp-proxy installs (a WARN is printed) |
-| Permission denied on global install | Use `npm install -g --prefix ~/.local @nano-step/nano-brain` then add `~/.local/bin` to `PATH` |
-| macOS Gatekeeper blocks binary | Run `xattr -dr com.apple.quarantine ~/.local/bin/nano-brain` (or wherever binary landed) |
-| MCP URL wrong in container | Export `NANO_BRAIN_MCP_URL=http://host.docker.internal:3100/mcp` before starting agent |
-| MCP URL wrong on bare-metal | Export `NANO_BRAIN_MCP_URL=http://localhost:3100/mcp` |
-| Wrong binary resolving (npx vs global) | Set `NANO_BRAIN_BIN=/absolute/path/to/nano-brain` to pin the binary explicitly |
+| Decision reversed | New doc with `supersedes="#<old-uuid>"` |
+| Living doc evolves | Same `source_path` → auto-upsert |
+| Old info is wrong | Supersede it — don't leave contradictions |
+| Supersede chain >3 deep | Consolidate into single "History" doc |
 
+## Code Intelligence
+
+```
+memory_impact(node="path/file.go::Symbol", max_depth=2)
+```
+
+| Impacted count | Risk | Action |
+|---|---|---|
+| 0-3 | Low | Proceed |
+| 4-10 | Medium | Review each dependent before changing |
+| 10+ | High | Incremental approach, consult first |
+
+**Read the impacted nodes, not just count.** 10 trivial callers ≠ 10 critical paths.
+
+**Path format:** `"<relative-or-absolute-path>"` or `"<path>::<SymbolName>"`. Both relative and absolute paths work (resolved server-side). Use `paths="relative"` in output to save tokens.
+
+## Failure Recovery
+
+### Zero results but you know something exists
+
+1. Check workspace: `memory_workspaces_resolve(path="...")` — is hash correct?
+2. Check queue: `memory_status()` → if `queue_pending > 0`, embeddings not done yet
+3. Try BM25: `memory_search` works instantly (no embedding needed)
+4. Broaden query: remove specifics, try alternate terminology
+5. Check tags: your filter might be excluding results
+
+### Just saved but can't find it
+
+**Expected.** New docs are BM25-searchable immediately but vector-searchable only after embedding (5-30s delay).
+- For instant verification: `memory_get(path="#<id-from-write-response>")`
+- For searching just-saved content: use `memory_search` (BM25), not `memory_vsearch`
+
+### Conflicting memories found
+
+Two contradictory decisions in results? Sort by `updated_at` — latest wins. Check if newer doc has `supersedes` field. If neither supersedes the other, flag to user.
+
+## Multi-Agent Coordination
+
+When multiple agents share a workspace:
+
+- **Last-write-wins** for same `source_path` — use unique paths for parallel work
+- **Tag consistency:** All agents should call `memory_tags` before tagging to match conventions
+- **Pass workspace hash explicitly** in delegation prompts — subagents can't resolve paths
+- **Include `load_skills=["nano-brain"]`** so subagents have access
+- **Pre-query and include results** in delegation context — saves subagent from re-querying
+
+## Skill Interactions
+
+| Working with... | nano-brain adds... |
+|---|---|
+| **systematic-debugging** | Before debugging: `memory_search("<error msg>", tags=["bug"])`. After fix: `memory_write` with tag `bug` |
+| **deep-design** | After design accepted: `memory_write` key trade-offs with tag `decision` |
+| **code-review** | During review: query for "did we decide against this pattern?" |
+| **git-commit** | After architectural commits: persist the WHY (commit msg is WHERE, memory is WHY) |
+| **feature-analysis** | Before analysis: query for prior analysis/context on this module |
+
+## ESPECIALLY Use When
+
+- You think "I'm sure this hasn't been tried before" — verify that assumption
+- Refactoring shared code — always `memory_impact` first
+- Working in unfamiliar territory — 5min wake_up saves hours
+- Making an architectural decision — check if reversible or if someone tried already
+- Picking up someone else's work — query their session context
+
+## References (load on demand)
+
+- `@references/mcp-schemas.md` — full input/output schemas for all 14 MCP tools
+- `@references/time-filters.md` — time-range filter formats, pagination, cursor mechanics
+- `@references/troubleshooting.md` — connection errors, daemon health, common issues
