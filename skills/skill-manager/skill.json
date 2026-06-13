@@ -1,0 +1,6 @@
+{
+  "name": "skill-manager",
+  "version": "1.0.0",
+  "description": "Manage OpenCode skills with lazy loading - archive, restore, search skills to save context tokens.",
+  "author": "tamlh"
+}
